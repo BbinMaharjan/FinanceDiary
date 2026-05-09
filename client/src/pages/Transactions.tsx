@@ -86,7 +86,7 @@ export default function Transactions({ type: routeType }: Props) {
             <SelectItem value="Bank Transfer">Bank</SelectItem>
             <SelectItem value="Card">Card</SelectItem>
             <SelectItem value="UPI">UPI</SelectItem>
-            <SelectItem value="Mobile Wallet">Wallet</SelectItem>
+            <SelectItem value="Wallet">Wallet</SelectItem>
             <SelectItem value="Other">Other</SelectItem>
           </SelectContent>
         </Select>

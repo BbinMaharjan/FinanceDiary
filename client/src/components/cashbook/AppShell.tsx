@@ -50,9 +50,8 @@ export function AppShell() {
               <Button variant="ghost" size="icon" className="hidden sm:inline-flex">
                 <Search className="size-4" />
               </Button>
-              <Button variant="ghost" size="icon" className="relative">
+              <Button variant="ghost" size="icon">
                 <Bell className="size-4" />
-                <span className="absolute top-2 right-2 size-1.5 rounded-full bg-expense" />
               </Button>
               <div className="size-9 rounded-full bg-gradient-to-br from-[var(--primary)] to-blue-500 grid place-items-center text-primary-foreground text-sm font-semibold shadow-glow">
                 {initials}
