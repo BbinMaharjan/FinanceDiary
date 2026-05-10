@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Button, Card, Form, Input, Typography, Alert } from 'antd';
 import { UserOutlined, MailOutlined, LockOutlined } from '@ant-design/icons';
+import type { ApiError } from '../types';
 
 export default function Register() {
   const [error, setError] = useState('');
@@ -16,15 +17,16 @@ export default function Register() {
     try {
       await register(values.name, values.email, values.password);
       navigate('/');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Registration failed');
+    } catch (err: unknown) {
+      const apiErr = err as ApiError;
+      setError(apiErr.response?.data?.message || 'Registration failed');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Card>
+    <Card style={{ borderRadius: 12 }}>
       <Typography.Title level={3} style={{ textAlign: 'center', marginBottom: 24 }}>
         Create account
       </Typography.Title>

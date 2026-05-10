@@ -1,17 +1,18 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import api from '../services/api';
+import type { User, AuthContextType } from '../types';
 
-const AuthContext = createContext(null);
+const AuthContext = createContext<AuthContextType | null>(null);
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('user') || 'null'));
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(() => JSON.parse(localStorage.getItem('user') || 'null'));
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user?.token) {
       api.get('/auth/me')
         .then((res) => {
-          const updated = { ...user, ...res.data };
+          const updated = { ...user, ...res.data } as User;
           setUser(updated);
           localStorage.setItem('user', JSON.stringify(updated));
         })
@@ -25,18 +26,18 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const login = async (email, password) => {
+  const login = async (email: string, password: string) => {
     const { data } = await api.post('/auth/login', { email, password });
     setUser(data);
     localStorage.setItem('user', JSON.stringify(data));
-    return data;
+    return data as User;
   };
 
-  const register = async (name, email, password) => {
+  const register = async (name: string, email: string, password: string) => {
     const { data } = await api.post('/auth/register', { name, email, password });
     setUser(data);
     localStorage.setItem('user', JSON.stringify(data));
-    return data;
+    return data as User;
   };
 
   const logout = () => {
@@ -51,4 +52,8 @@ export function AuthProvider({ children }) {
   );
 }
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = (): AuthContextType => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
+};

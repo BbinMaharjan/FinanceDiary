@@ -4,17 +4,29 @@ const MonthlySummary = require('../models/MonthlySummary');
 const getDashboard = async (req, res, next) => {
   try {
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+    // Look back 30 days for the "monthly" overview
+    const thirtyDaysAgo = new Date(now);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
+    thirtyDaysAgo.setHours(0, 0, 0, 0);
+
+    // Last 30 days prior for comparison delta
+    const sixtyDaysAgo = new Date(thirtyDaysAgo);
+    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 30);
 
     // Last 14 days for cash flow
     const fourteenDaysAgo = new Date(now);
     fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 13);
     fourteenDaysAgo.setHours(0, 0, 0, 0);
 
-    const [monthlyStats, yearlyStats, recentTransactions, dailyCashFlow, categoryBreakdown] = await Promise.all([
+    const [overallStats, monthlyStats, yearlyStats, recentTransactions, dailyCashFlow, categoryBreakdown, prevMonthStats] = await Promise.all([
       Transaction.aggregate([
-        { $match: { user: req.user._id, date: { $gte: startOfMonth, $lte: now } } },
+        { $match: { user: req.user._id } },
+        { $group: { _id: '$type', total: { $sum: '$amount' } } },
+      ]),
+      Transaction.aggregate([
+        { $match: { user: req.user._id, date: { $gte: thirtyDaysAgo, $lte: now } } },
         { $group: { _id: '$type', total: { $sum: '$amount' } } },
       ]),
       Transaction.aggregate([
@@ -41,7 +53,7 @@ const getDashboard = async (req, res, next) => {
           $match: {
             user: req.user._id,
             type: 'expense',
-            date: { $gte: startOfMonth, $lte: now },
+            date: { $gte: thirtyDaysAgo, $lte: now },
           },
         },
         { $group: { _id: '$category', total: { $sum: '$amount' } } },
@@ -56,23 +68,21 @@ const getDashboard = async (req, res, next) => {
         { $unwind: { path: '$categoryInfo', preserveNullAndEmptyArrays: true } },
         { $sort: { total: -1 } },
       ]),
+      Transaction.aggregate([
+        { $match: { user: req.user._id, date: { $gte: sixtyDaysAgo, $lt: thirtyDaysAgo } } },
+        { $group: { _id: '$type', total: { $sum: '$amount' } } },
+      ]),
     ]);
 
+    const overallIncome = overallStats.find(s => s._id === 'income')?.total || 0;
+    const overallExpense = overallStats.find(s => s._id === 'expense')?.total || 0;
     const monthlyIncome = monthlyStats.find(s => s._id === 'income')?.total || 0;
     const monthlyExpense = monthlyStats.find(s => s._id === 'expense')?.total || 0;
     const yearlyIncome = yearlyStats.find(s => s._id === 'income')?.total || 0;
     const yearlyExpense = yearlyStats.find(s => s._id === 'expense')?.total || 0;
 
-    // Compute last month stats for delta
-    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
-    const lastMonthStats = await Transaction.aggregate([
-      { $match: { user: req.user._id, date: { $gte: lastMonthStart, $lte: lastMonthEnd } } },
-      { $group: { _id: '$type', total: { $sum: '$amount' } } },
-    ]);
-
-    const lastMonthIncome = lastMonthStats.find(s => s._id === 'income')?.total || 0;
-    const lastMonthExpense = lastMonthStats.find(s => s._id === 'expense')?.total || 0;
+    const lastMonthIncome = prevMonthStats.find(s => s._id === 'income')?.total || 0;
+    const lastMonthExpense = prevMonthStats.find(s => s._id === 'expense')?.total || 0;
 
     // Generate full 14-day range filling gaps with 0
     const cashFlowMap = {};
@@ -92,9 +102,13 @@ const getDashboard = async (req, res, next) => {
     const breakdown = categoryBreakdown.map(c => ({
       categoryName: c.categoryInfo?.name || 'Other',
       total: c.total,
+      icon: c.categoryInfo?.icon || '📄',
     }));
 
     res.json({
+      overallIncome,
+      overallExpense,
+      overallBalance: overallIncome - overallExpense,
       monthlyIncome,
       monthlyExpense,
       monthlyBalance: monthlyIncome - monthlyExpense,
@@ -116,9 +130,9 @@ const getMonthlySummaries = async (req, res, next) => {
   try {
     const { year } = req.query;
     const filter = { user: req.user._id };
-    if (year) filter.nepaliYear = Number(year);
+    if (year) filter.year = Number(year);
 
-    const summaries = await MonthlySummary.find(filter).sort({ nepaliYear: -1, _id: -1 });
+    const summaries = await MonthlySummary.find(filter).sort({ year: -1, _id: -1 });
     res.json(summaries);
   } catch (error) {
     next(error);
@@ -132,7 +146,7 @@ const getYearlyReport = async (req, res, next) => {
 
     const monthlyData = await MonthlySummary.find({
       user: req.user._id,
-      nepaliYear: targetYear,
+      year: targetYear,
     }).sort({ _id: 1 });
 
     const categoryBreakdown = await Transaction.aggregate([
@@ -140,8 +154,8 @@ const getYearlyReport = async (req, res, next) => {
         $match: {
           user: req.user._id,
           date: {
-            $gte: new Date(targetYear - 57, 0, 1),
-            $lte: new Date(targetYear - 57, 11, 31),
+            $gte: new Date(targetYear, 0, 1),
+            $lte: new Date(targetYear, 11, 31),
           },
         },
       },

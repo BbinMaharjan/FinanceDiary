@@ -9,22 +9,20 @@ import { Card, Col, Row, Skeleton, Typography, Flex } from 'antd';
 import { StatCard } from '../components/cashbook/StatCard';
 import { TransactionItem } from '../components/cashbook/TransactionItem';
 import api from '../services/api';
-
-const CATEGORY_EMOJIS: Record<string, string> = {
-  salary: '💼', freelance: '💻', business: '🏪', gift: '🎁', investment: '📈',
-  food: '🍔', transport: '🚗', shopping: '🛍️', bills: '📄', health: '💊',
-  education: '📚', entertainment: '🎮', other: '📦',
-};
+import type { DashboardData, CategorySpending, Transaction } from '../types';
 
 export default function Dashboard() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    api
-      .get('/reports/dashboard')
-      .then(({ data }: any) => setData(data))
-      .catch(console.error)
+    api.get('/reports/dashboard')
+      .then((res) => setData(res.data))
+      .catch((err) => {
+        console.error('Dashboard API error:', err);
+        setError(err.message || 'Failed to load dashboard');
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -53,37 +51,36 @@ export default function Dashboard() {
     );
   }
 
+  if (error) {
+    return (
+      <div style={{ textAlign: 'center', padding: '48px 0' }}>
+        <Typography.Text type="danger" style={{ fontSize: 16, display: 'block', marginBottom: 8 }}>
+          {error}
+        </Typography.Text>
+        <Typography.Text type="secondary">Check that the backend server is running on port 5000</Typography.Text>
+      </div>
+    );
+  }
+
   if (!data) return null;
 
-  const deltaIncome = data.lastMonthIncome
-    ? Math.round(((data.monthlyIncome - data.lastMonthIncome) / data.lastMonthIncome) * 100)
-    : undefined;
-  const deltaExpense = data.lastMonthExpense
-    ? Math.round(((data.monthlyExpense - data.lastMonthExpense) / data.lastMonthExpense) * 100)
-    : undefined;
-  const deltaBalance = data.lastMonthIncome && data.lastMonthExpense
-    ? Math.round((((data.monthlyIncome - data.monthlyExpense) - (data.lastMonthIncome - data.lastMonthExpense)) / Math.max(Math.abs(data.lastMonthIncome - data.lastMonthExpense), 1)) * 100)
-    : undefined;
-
-  const totalSpend = data.spendingBreakdown?.reduce((sum: number, c: any) => sum + c.total, 0) || 0;
+  const totalSpend = data.spendingBreakdown?.reduce((sum: number, c: CategorySpending) => sum + c.total, 0) || 0;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      {/* Stat Cards */}
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={8}>
-          <StatCard label="Total Income" amount={data.monthlyIncome} variant="income" delta={deltaIncome} index={0} />
+          <StatCard label="Overall Income" amount={data.overallIncome} variant="income" index={0} />
         </Col>
         <Col xs={24} sm={8}>
-          <StatCard label="Total Expense" amount={data.monthlyExpense} variant="expense" delta={deltaExpense} index={1} />
+          <StatCard label="Overall Expense" amount={data.overallExpense} variant="expense" index={1} />
         </Col>
         <Col xs={24} sm={8}>
-          <StatCard label="Net Balance" amount={data.monthlyBalance} variant="balance" delta={deltaBalance} index={2} />
+          <StatCard label="Net Balance" amount={data.overallBalance} variant="balance" index={2} />
         </Col>
       </Row>
 
       <Row gutter={[16, 16]}>
-        {/* Cash Flow Chart */}
         <Col xs={24} lg={12}>
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
             <Card
@@ -117,7 +114,6 @@ export default function Dashboard() {
           </motion.div>
         </Col>
 
-        {/* Spending Breakdown */}
         <Col xs={24} lg={12}>
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
             <Card
@@ -131,9 +127,9 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {data.spendingBreakdown?.map((cat: any, i: number) => {
+                  {data.spendingBreakdown?.map((cat: CategorySpending, i: number) => {
                     const pct = totalSpend ? Math.round((cat.total / totalSpend) * 100) : 0;
-                    const emoji = CATEGORY_EMOJIS[cat.categoryName?.toLowerCase()] || '📄';
+                    const emoji = cat.icon || '📄';
                     return (
                       <motion.div
                         key={cat.categoryName}
@@ -185,7 +181,6 @@ export default function Dashboard() {
         </Col>
       </Row>
 
-      {/* Recent Transactions */}
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
         <Card
           title={<Typography.Text strong>Recent Transactions</Typography.Text>}
@@ -207,7 +202,7 @@ export default function Dashboard() {
             </div>
           ) : (
             <div>
-              {data.recentTransactions?.slice(0, 6).map((tx: any, i: number) => (
+              {data.recentTransactions?.slice(0, 6).map((tx: Transaction, i: number) => (
                 <TransactionItem
                   key={tx._id}
                   title={tx.title}
@@ -215,6 +210,7 @@ export default function Dashboard() {
                   type={tx.type}
                   date={tx.date}
                   categoryName={tx.category?.name}
+                  categoryIcon={tx.category?.icon}
                   index={i}
                 />
               ))}

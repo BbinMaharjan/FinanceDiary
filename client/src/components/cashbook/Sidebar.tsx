@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
   ArrowDownCircle,
@@ -7,207 +7,161 @@ import {
   BarChart3,
   Settings,
   Tags,
-  X,
-} from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
-import { Typography, theme } from 'antd';
+} from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
+import { Typography, theme } from "antd";
 
 const NAV_ITEMS = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/income', label: 'Income', icon: ArrowDownCircle },
-  { to: '/expense', label: 'Expense', icon: ArrowUpCircle },
-  { to: '/monthly-book', label: 'Cash Book', icon: BookOpen },
-  { to: '/reports', label: 'Reports', icon: BarChart3 },
-  { to: '/categories', label: 'Categories', icon: Tags },
-  { to: '/settings', label: 'Settings', icon: Settings },
+  { to: "/", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/income", label: "Income", icon: ArrowDownCircle },
+  { to: "/expense", label: "Expense", icon: ArrowUpCircle },
+  { to: "/monthly-book", label: "Cash Book", icon: BookOpen },
+  { to: "/reports", label: "Reports", icon: BarChart3 },
+  { to: "/categories", label: "Categories", icon: Tags },
+  { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
-export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function Sidebar() {
   const { user } = useAuth();
   const { token } = theme.useToken();
 
   const initials =
     user?.name
-      ?.split(' ')
+      ?.split(" ")
       .map((n: string) => n[0])
-      .join('')
+      .join("")
       .toUpperCase()
-      .slice(0, 2) || 'U';
+      .slice(0, 2) || "U";
 
   return (
-    <>
-      {open && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.5)',
-            zIndex: 40,
-          }}
-          className="lg-hidden"
-          onClick={onClose}
-        />
-      )}
-      <aside
+    <aside
+      style={{
+        width: 256,
+        background: token.colorBgContainer,
+        borderRight: `1px solid ${token.colorBorderSecondary}`,
+        display: "flex",
+        flexDirection: "column",
+        height: "100vh",
+        position: "fixed",
+        top: 0,
+        left: 0,
+        zIndex: 30,
+      }}
+    >
+      <div
         style={{
-          position: 'fixed',
-          inset: '0 auto 0 0',
-          zIndex: 50,
-          width: 256,
-          background: token.colorBgContainer,
-          borderRight: `1px solid ${token.colorBorderSecondary}`,
-          transform: open ? 'translateX(0)' : 'translateX(-100%)',
-          transition: 'transform 0.2s ease',
-          display: 'flex',
-          flexDirection: 'column',
+          display: "flex",
+          alignItems: "center",
+          padding: "16px 20px",
+          borderBottom: `1px solid ${token.colorBorderSecondary}`,
         }}
-        className="sidebar-desktop"
       >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '16px 20px',
-            borderBottom: `1px solid ${token.colorBorderSecondary}`,
-          }}
-        >
-          <Typography.Title level={5} style={{ margin: 0 }}>
-            Daily Cash Book
-          </Typography.Title>
-          <button
-            onClick={onClose}
-            className="sidebar-close-btn"
-            style={{
-              padding: 4,
-              color: token.colorTextSecondary,
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
+        <Typography.Title level={5} style={{ margin: 0 }}>
+          Daily Cash Book
+        </Typography.Title>
+      </div>
+
+      <nav style={{ flex: 1, padding: 12, overflowY: "auto" }}>
+        {NAV_ITEMS.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.to === "/"}
+            style={({ isActive }) => ({
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              padding: "10px 12px",
+              borderRadius: 8,
+              fontSize: 14,
+              fontWeight: 500,
+              textDecoration: "none",
+              marginBottom: 4,
+              background: isActive ? token.colorFillSecondary : "transparent",
+              color: isActive ? token.colorText : token.colorTextSecondary,
+              transition: "background 0.2s, color 0.2s",
+            })}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = token.colorFillTertiary;
+            }}
+            onMouseLeave={(e) => {
+              const isActive = e.currentTarget.classList.contains("active");
+              if (!isActive) e.currentTarget.style.background = "transparent";
             }}
           >
-            <X style={{ width: 16, height: 16 }} />
-          </button>
-        </div>
+            <item.icon style={{ width: 16, height: 16 }} />
+            {item.label}
+          </NavLink>
+        ))}
+      </nav>
 
-        <nav style={{ flex: 1, padding: 12, overflowY: 'auto' }}>
-          {NAV_ITEMS.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to === '/'}
-              onClick={onClose}
-              style={({ isActive }) => ({
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                padding: '10px 12px',
-                borderRadius: 8,
-                fontSize: 14,
-                fontWeight: 500,
-                textDecoration: 'none',
-                marginBottom: 4,
-                background: isActive ? token.colorFillSecondary : 'transparent',
-                color: isActive ? token.colorText : token.colorTextSecondary,
-                transition: 'background 0.2s, color 0.2s',
-              })}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = token.colorFillTertiary;
-              }}
-              onMouseLeave={(e) => {
-                const isActive = e.currentTarget.classList.contains('active');
-                if (!isActive) e.currentTarget.style.background = 'transparent';
-              }}
-            >
-              <item.icon style={{ width: 16, height: 16 }} />
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
-
-        <div
+      <div
+        style={{
+          padding: 16,
+          borderTop: `1px solid ${token.colorBorderSecondary}`,
+        }}
+      >
+        {/* <div
           style={{
+            borderRadius: 12,
+            background: `linear-gradient(135deg, ${token.colorPrimary}, #3b82f6)`,
             padding: 16,
-            borderTop: `1px solid ${token.colorBorderSecondary}`,
+            color: '#fff',
+            marginBottom: 12,
           }}
         >
+          <Typography.Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 12, fontWeight: 500, display: 'block' }}>
+            Track every रुपया
+          </Typography.Text>
+          <Typography.Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 10, display: 'block', marginTop: 2 }}>
+            Small wins compound.
+          </Typography.Text>
+        </div> */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div
             style={{
-              borderRadius: 12,
+              width: 32,
+              height: 32,
+              borderRadius: "50%",
               background: `linear-gradient(135deg, ${token.colorPrimary}, #3b82f6)`,
-              padding: 16,
-              color: '#fff',
-              marginBottom: 12,
+              display: "grid",
+              placeItems: "center",
+              color: "#fff",
+              fontSize: 12,
+              fontWeight: 700,
+              flexShrink: 0,
             }}
           >
-            <Typography.Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 12, fontWeight: 500, display: 'block' }}>
-              Track every रुपया
-            </Typography.Text>
-            <Typography.Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 10, display: 'block', marginTop: 2 }}>
-              Small wins compound.
-            </Typography.Text>
+            {initials}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <Typography.Text
               style={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                background: `linear-gradient(135deg, ${token.colorPrimary}, #3b82f6)`,
-                display: 'grid',
-                placeItems: 'center',
-                color: '#fff',
-                fontSize: 12,
-                fontWeight: 700,
-                flexShrink: 0,
+                fontSize: 14,
+                fontWeight: 500,
+                display: "block",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
               }}
             >
-              {initials}
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <Typography.Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: 500,
-                  display: 'block',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {user?.name || 'User'}
-              </Typography.Text>
-              <Typography.Text
-                type="secondary"
-                style={{
-                  fontSize: 12,
-                  display: 'block',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {user?.email}
-              </Typography.Text>
-            </div>
+              {user?.name || "User"}
+            </Typography.Text>
+            <Typography.Text
+              type="secondary"
+              style={{
+                fontSize: 12,
+                display: "block",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {user?.email}
+            </Typography.Text>
           </div>
         </div>
-      </aside>
-
-      <style>{`
-        @media (min-width: 992px) {
-          .sidebar-desktop {
-            position: static !important;
-            transform: translateX(0) !important;
-          }
-          .sidebar-close-btn {
-            display: none !important;
-          }
-          .lg-hidden {
-            display: none !important;
-          }
-        }
-      `}</style>
-    </>
+      </div>
+    </aside>
   );
 }

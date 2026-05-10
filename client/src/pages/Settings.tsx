@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import api from '../services/api';
 import { Button, Card, Input, Switch, Divider, Avatar, Alert, Typography } from 'antd';
+import type { ApiError } from '../types';
 
 export default function Settings() {
   const { user, logout } = useAuth();
@@ -23,49 +24,50 @@ export default function Settings() {
     try {
       await api.put('/auth/profile', { name, email });
       setMessage('Profile updated');
-    } catch (err: any) {
-      setMessage(err.response?.data?.message || 'Update failed');
+    } catch (err: unknown) {
+      const apiErr = err as ApiError;
+      setMessage(apiErr.response?.data?.message || 'Update failed');
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className="max-w-lg mx-auto space-y-6">
-      <h2 className="font-display text-lg font-semibold">Settings</h2>
+    <div style={{ maxWidth: 640, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <Typography.Title level={4} style={{ margin: 0 }}>Settings</Typography.Title>
 
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-        <Card>
-          <div className="flex items-center gap-4" style={{ marginBottom: 16 }}>
-            <Avatar size={56} style={{ backgroundColor: 'var(--primary)', verticalAlign: 'middle', fontSize: 20, fontWeight: 600 }}>
+        <Card style={{ borderRadius: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
+            <Avatar size={56} style={{ background: '#1677ff', verticalAlign: 'middle', fontSize: 20, fontWeight: 600 }}>
               {initials}
             </Avatar>
             <div>
-              <p className="font-medium">{user?.name}</p>
-              <p className="text-sm text-muted-foreground">{user?.email}</p>
+              <Typography.Text style={{ fontWeight: 500, display: 'block' }}>{user?.name}</Typography.Text>
+              <Typography.Text type="secondary" style={{ fontSize: 14 }}>{user?.email}</Typography.Text>
             </div>
           </div>
 
           <Divider />
 
-          <form onSubmit={handleSave} className="space-y-4">
-            <h4 className="font-medium text-sm flex items-center gap-2">
-              <User className="size-4" /> Profile
+          <form onSubmit={handleSave}>
+            <h4 style={{ fontWeight: 500, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+              <User style={{ width: 16, height: 16 }} /> Profile
             </h4>
 
             {message && (
-              <Alert message={message} type={message === 'Profile updated' ? 'success' : 'error'} showIcon />
+              <Alert message={message} type={message === 'Profile updated' ? 'success' : 'error'} showIcon style={{ marginBottom: 16 }} />
             )}
 
-            <div>
+            <div style={{ marginBottom: 16 }}>
               <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Name</label>
               <Input value={name} onChange={(e) => setName(e.target.value)} />
             </div>
-            <div>
+            <div style={{ marginBottom: 16 }}>
               <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Email</label>
               <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
-            <Button type="primary" htmlType="submit" loading={saving} icon={<Save className="size-4" />}>
+            <Button type="primary" htmlType="submit" loading={saving} icon={<Save style={{ width: 16, height: 16 }} />}>
               {saving ? 'Saving...' : 'Save Changes'}
             </Button>
           </form>
@@ -73,14 +75,14 @@ export default function Settings() {
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-        <Card>
-          <h4 className="font-medium text-sm flex items-center gap-2" style={{ marginBottom: 16 }}>
-            {dark ? <Moon className="size-4" /> : <Sun className="size-4" />} Appearance
+        <Card style={{ borderRadius: 12 }}>
+          <h4 style={{ fontWeight: 500, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+            {dark ? <Moon style={{ width: 16, height: 16 }} /> : <Sun style={{ width: 16, height: 16 }} />} Appearance
           </h4>
-          <div className="flex items-center justify-between">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <p className="text-sm font-medium">Dark Mode</p>
-              <p className="text-xs text-muted-foreground">Switch between light and dark theme</p>
+              <Typography.Text style={{ fontWeight: 500, display: 'block' }}>Dark Mode</Typography.Text>
+              <Typography.Text type="secondary" style={{ fontSize: 14 }}>Switch between light and dark theme</Typography.Text>
             </div>
             <Switch checked={dark} onChange={toggleTheme} />
           </div>
@@ -88,15 +90,15 @@ export default function Settings() {
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-        <Card>
-          <h4 className="font-medium text-sm flex items-center gap-2" style={{ marginBottom: 16 }}>
-            <Download className="size-4" /> Export Data
+        <Card style={{ borderRadius: 12 }}>
+          <h4 style={{ fontWeight: 500, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+            <Download style={{ width: 16, height: 16 }} /> Export Data
           </h4>
-          <div className="flex gap-2">
-            <Button icon={<Download className="size-4" />} onClick={() => window.open('/api/export/excel', '_blank')} style={{ flex: 1 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Button icon={<Download style={{ width: 16, height: 16 }} />} onClick={() => window.open('/api/export/excel', '_blank')} style={{ flex: 1 }}>
               Excel
             </Button>
-            <Button icon={<Download className="size-4" />} onClick={() => window.open('/api/export/pdf', '_blank')} style={{ flex: 1 }}>
+            <Button icon={<Download style={{ width: 16, height: 16 }} />} onClick={() => window.open('/api/export/pdf', '_blank')} style={{ flex: 1 }}>
               PDF
             </Button>
           </div>
@@ -104,8 +106,8 @@ export default function Settings() {
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-        <Card>
-          <Button danger block icon={<LogOut className="size-4" />} onClick={logout}>
+        <Card style={{ borderRadius: 12 }}>
+          <Button danger block icon={<LogOut style={{ width: 16, height: 16 }} />} onClick={logout}>
             Sign out
           </Button>
         </Card>

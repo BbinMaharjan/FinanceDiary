@@ -2,20 +2,15 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Download } from 'lucide-react';
 import api from '../services/api';
-import { Button, Card, Select, Skeleton, Tag } from 'antd';
+import { Button, Card, Select, Skeleton, Typography, Flex } from 'antd';
+import type { MonthlySummary, Transaction } from '../types';
 
-const NEPALI_MONTHS = ['Baishakh', 'Jestha', 'Ashadh', 'Shrawan', 'Bhadra', 'Ashwin', 'Kartik', 'Mangsir', 'Poush', 'Magh', 'Falgun', 'Chaitra'];
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-function getMonthDateRange(nepaliMonth: string, nepaliYear: number) {
-  const monthIndex = NEPALI_MONTHS.indexOf(nepaliMonth);
-  const gregYear = nepaliYear + 57;
-  let startMonth = (monthIndex + 1) % 12 || 12;
-  let startYear = gregYear + (monthIndex === 11 ? 1 : 0);
-  let endMonth = startMonth + 1;
-  let endYear = startYear;
-  if (endMonth > 12) { endMonth = 1; endYear += 1; }
-  const start = new Date(startYear, startMonth - 1, 1);
-  const end = new Date(endYear, endMonth - 1, 1);
+function getMonthDateRange(month: string, year: number) {
+  const monthIndex = MONTHS.indexOf(month);
+  const start = new Date(year, monthIndex, 1);
+  const end = new Date(year, monthIndex + 1, 1);
   return {
     startDate: start.toISOString().split('T')[0],
     endDate: end.toISOString().split('T')[0],
@@ -23,16 +18,16 @@ function getMonthDateRange(nepaliMonth: string, nepaliYear: number) {
 }
 
 export default function MonthlyBook() {
-  const [summaries, setSummaries] = useState<any[]>([]);
-  const [selectedMonth, setSelectedMonth] = useState(NEPALI_MONTHS[new Date().getMonth()]);
-  const [year, setYear] = useState(new Date().getFullYear() - 57);
+  const [summaries, setSummaries] = useState<MonthlySummary[]>([]);
+  const [selectedMonth, setSelectedMonth] = useState(MONTHS[new Date().getMonth()]);
+  const [year, setYear] = useState(new Date().getFullYear());
   const [loading, setLoading] = useState(true);
-  const [monthTransactions, setMonthTransactions] = useState<any[]>([]);
+  const [monthTransactions, setMonthTransactions] = useState<Transaction[]>([]);
   const [txLoading, setTxLoading] = useState(false);
 
   useEffect(() => {
     setLoading(true);
-    api.get('/reports/monthly', { params: { year } })
+    api.get<MonthlySummary[]>('/reports/monthly', { params: { year } })
       .then(({ data }) => setSummaries(data))
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -48,17 +43,15 @@ export default function MonthlyBook() {
       .finally(() => setTxLoading(false));
   }, [selectedMonth, year]);
 
-  const currentSummary = summaries.find((s: any) => s.nepaliMonth === selectedMonth);
+  const currentSummary = summaries.find((s: MonthlySummary) => s.month === selectedMonth);
 
   const handleDownload = async () => {
     try {
-      const startDate = `${year + 56}-04-01`;
-      const endDate = `${year + 57}-03-31`;
       const { data } = await api.get('/export/excel', {
-        params: { startDate, endDate },
+        params: { startDate: `${year}-01-01`, endDate: `${year}-12-31` },
         responseType: 'blob',
       });
-      const url = URL.createObjectURL(data);
+      const url = URL.createObjectURL(data as Blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `cash-book-${year}.xlsx`;
@@ -70,21 +63,21 @@ export default function MonthlyBook() {
   };
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <h2 className="font-display text-lg font-semibold">Cash Book</h2>
-        <div className="flex items-center gap-2">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <Flex align="center" justify="space-between" wrap="wrap" gap={8}>
+        <Typography.Title level={4} style={{ margin: 0 }}>Cash Book</Typography.Title>
+        <Flex gap={8} align="center">
           <Select value={String(year)} onChange={(v) => setYear(Number(v))} style={{ width: 100 }}>
-            {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 57 - 5 + i).map((y) => (
+            {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i).map((y) => (
               <Select.Option key={y} value={String(y)}>{y}</Select.Option>
             ))}
           </Select>
-          <Button icon={<Download className="size-4" />} onClick={handleDownload} />
-        </div>
-      </div>
+          <Button icon={<Download style={{ width: 16, height: 16 }} />} onClick={handleDownload} />
+        </Flex>
+      </Flex>
 
-      <div className="flex gap-2 overflow-x-auto pb-2">
-        {NEPALI_MONTHS.map((month) => (
+      <Flex gap={8} wrap="wrap">
+        {MONTHS.map((month) => (
           <Button
             key={month}
             type={selectedMonth === month ? 'primary' : 'default'}
@@ -94,38 +87,38 @@ export default function MonthlyBook() {
             {month}
           </Button>
         ))}
-      </div>
+      </Flex>
 
       {loading ? (
-        <div className="grid grid-cols-1 gap-4">
-          <Skeleton.Button active style={{ height: 128, borderRadius: 12 }} block />
-          <Skeleton.Button active style={{ height: 192, borderRadius: 12 }} block />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <Skeleton.Button active style={{ height: 128, borderRadius: 12, width: '100%' }} />
+          <Skeleton.Button active style={{ height: 192, borderRadius: 12, width: '100%' }} />
         </div>
       ) : currentSummary ? (
         <>
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-            <Card>
-              <div className="grid grid-cols-3 gap-4 text-center" style={{ padding: '12px 0' }}>
+            <Card style={{ borderRadius: 12 }}>
+              <Flex justify="space-around" style={{ padding: '12px 0' }}>
                 {[
-                  { label: 'Income', value: currentSummary.totalIncome, color: 'text-income' },
-                  { label: 'Expense', value: currentSummary.totalExpense, color: 'text-expense' },
-                  { label: 'Balance', value: currentSummary.balance, color: currentSummary.balance >= 0 ? 'text-balance' : 'text-destructive' },
+                  { label: 'Income', value: currentSummary.totalIncome, color: '#22c55e' },
+                  { label: 'Expense', value: currentSummary.totalExpense, color: '#f97316' },
+                  { label: 'Balance', value: currentSummary.balance, color: currentSummary.balance >= 0 ? '#22c55e' : '#ef4444' },
                 ].map((card) => (
-                  <div key={card.label}>
-                    <p className="text-xs text-muted-foreground">{card.label}</p>
-                    <p className={`font-display text-xl font-bold tabular-nums ${card.color}`}>
+                  <div key={card.label} style={{ textAlign: 'center' }}>
+                    <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block' }}>{card.label}</Typography.Text>
+                    <Typography.Title level={3} style={{ margin: 0, color: card.color }}>
                       रू {card.value.toLocaleString('en-IN')}
-                    </p>
+                    </Typography.Title>
                   </div>
                 ))}
-              </div>
+              </Flex>
             </Card>
           </motion.div>
 
           {txLoading ? (
-            <div className="space-y-2">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton.Button key={i} active style={{ height: 56, borderRadius: 12 }} block />
+                <Skeleton.Button key={i} active style={{ height: 56, borderRadius: 12, width: '100%' }} />
               ))}
             </div>
           ) : monthTransactions.length > 0 && (
@@ -133,55 +126,86 @@ export default function MonthlyBook() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="rounded-xl border bg-card divide-y divide-border"
             >
-              {monthTransactions.map((tx: any, i: number) => (
-                <div key={tx._id || i} className="flex items-center justify-between p-4">
-                  <div>
-                    <p className="font-medium text-sm">{tx.title}</p>
-                    <p className="text-xs text-muted-foreground">{new Date(tx.date).toLocaleDateString()}</p>
-                  </div>
-                  <span className={`font-semibold text-sm tabular-nums ${tx.type === 'income' ? 'text-income' : 'text-expense'}`}>
-                    {tx.type === 'income' ? '+' : '-'}रू {tx.amount.toLocaleString('en-IN')}
-                  </span>
-                </div>
-              ))}
+              <Card style={{ borderRadius: 12, padding: 0 }}>
+                {monthTransactions.map((tx: Transaction, i: number) => (
+                  <Flex
+                    key={tx._id || i}
+                    align="center"
+                    justify="space-between"
+                    style={{
+                      padding: '12px 16px',
+                      borderBottom: i < monthTransactions.length - 1 ? '1px solid #f0f0f0' : 'none',
+                    }}
+                  >
+                    <div>
+                      <Typography.Text style={{ fontSize: 14, fontWeight: 500, display: 'block' }}>{tx.title}</Typography.Text>
+                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                        {new Date(tx.date).toLocaleDateString()}
+                      </Typography.Text>
+                    </div>
+                    <Typography.Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 600,
+                        fontVariantNumeric: 'tabular-nums',
+                        color: tx.type === 'income' ? '#22c55e' : '#f97316',
+                      }}
+                    >
+                      {tx.type === 'income' ? '+' : '-'}रू {tx.amount.toLocaleString('en-IN')}
+                    </Typography.Text>
+                  </Flex>
+                ))}
+              </Card>
             </motion.div>
           )}
         </>
       ) : (
-        <Card>
-          <div style={{ padding: '32px 0', textAlign: 'center' }}>
-            <p className="text-muted-foreground mb-1">No data for {selectedMonth}</p>
-            <p className="text-sm text-muted-foreground">Add transactions to see your monthly summary</p>
-          </div>
+        <Card style={{ borderRadius: 12, textAlign: 'center', padding: '32px 0' }}>
+          <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 4 }}>No data for {selectedMonth}</Typography.Text>
+          <Typography.Text type="secondary" style={{ fontSize: 14 }}>Add transactions to see your monthly summary</Typography.Text>
         </Card>
       )}
 
       {summaries.length > 0 && (
-        <Card title="All Monthly Summaries">
-          {summaries.length === 0 ? (
-            <p className="text-center py-4 text-muted-foreground text-sm">No summaries available</p>
-          ) : (
-            <div className="space-y-2">
-              {summaries.map((s: any) => (
-                <div
-                  key={`${s.nepaliMonth}-${s.nepaliYear}`}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors text-sm cursor-pointer"
-                  onClick={() => setSelectedMonth(s.nepaliMonth)}
-                >
-                  <span className="font-medium">{s.nepaliMonth} {s.nepaliYear}</span>
-                  <div className="flex gap-3 text-xs tabular-nums">
-                    <span className="text-income">+रू {s.totalIncome.toLocaleString('en-IN')}</span>
-                    <span className="text-expense">-रू {s.totalExpense.toLocaleString('en-IN')}</span>
-                    <span className={s.balance >= 0 ? 'text-balance font-medium' : 'text-destructive font-medium'}>
-                      रू {s.balance.toLocaleString('en-IN')}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+        <Card title={<Typography.Text strong>All Monthly Summaries</Typography.Text>} style={{ borderRadius: 12 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {summaries.map((s: MonthlySummary) => (
+              <Flex
+                key={`${s.month}-${s.year}`}
+                align="center"
+                justify="space-between"
+                style={{
+                  padding: '10px 12px',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                }}
+                onClick={() => setSelectedMonth(s.month)}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#f5f5f5'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+              >
+                <Typography.Text style={{ fontWeight: 500 }}>{s.month} {s.year}</Typography.Text>
+                <Flex gap={12} align="center">
+                  <Typography.Text style={{ color: '#22c55e', fontSize: 12, fontVariantNumeric: 'tabular-nums' }}>
+                    +रू {s.totalIncome.toLocaleString('en-IN')}
+                  </Typography.Text>
+                  <Typography.Text style={{ color: '#f97316', fontSize: 12, fontVariantNumeric: 'tabular-nums' }}>
+                    -रू {s.totalExpense.toLocaleString('en-IN')}
+                  </Typography.Text>
+                  <Typography.Text
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 600,
+                      fontVariantNumeric: 'tabular-nums',
+                      color: s.balance >= 0 ? '#22c55e' : '#ef4444',
+                    }}
+                  >
+                    रू {s.balance.toLocaleString('en-IN')}
+                  </Typography.Text>
+                </Flex>
+              </Flex>
+            ))}
+          </div>
         </Card>
       )}
     </div>

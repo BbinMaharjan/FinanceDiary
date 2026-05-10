@@ -2,26 +2,21 @@ import { motion } from 'framer-motion';
 import { Trash2 } from 'lucide-react';
 import { Typography, theme } from 'antd';
 
-const CATEGORY_EMOJIS: Record<string, string> = {
-  salary: '💼', freelance: '💻', business: '🏪', gift: '🎁', investment: '📈',
-  food: '🍔', transport: '🚗', shopping: '🛍️', bills: '📄', health: '💊',
-  education: '📚', entertainment: '🎮', other: '📦',
-};
-
 interface Props {
   title: string;
   amount: number;
   type: 'income' | 'expense';
   date: string;
   categoryName?: string;
+  categoryIcon?: string;
   paymentType?: string;
   onDelete?: () => void;
   index?: number;
 }
 
-export function TransactionItem({ title, amount, type, date, categoryName, paymentType, onDelete, index = 0 }: Props) {
+export function TransactionItem({ title, amount, type, date, categoryName, categoryIcon, paymentType, onDelete, index = 0 }: Props) {
   const { token } = theme.useToken();
-  const emoji = CATEGORY_EMOJIS[categoryName?.toLowerCase() || ''] || '📄';
+  const emoji = categoryIcon || '📄';
 
   return (
     <motion.div

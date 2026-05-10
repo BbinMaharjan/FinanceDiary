@@ -1,6 +1,6 @@
 const Transaction = require('../models/Transaction');
 const MonthlySummary = require('../models/MonthlySummary');
-const { toNepaliMonth } = require('../utils/nepaliDate');
+const { toEnglishMonth, ENGLISH_MONTHS } = require('../utils/nepaliDate');
 
 const getTransactions = async (req, res, next) => {
   try {
@@ -113,9 +113,11 @@ const deleteTransaction = async (req, res, next) => {
 };
 
 async function updateMonthlySummary(userId, date) {
-  const { month: nepaliMonth, year: nepaliYear } = toNepaliMonth(date);
+  const { month, year } = toEnglishMonth(date);
+  const monthIndex = ENGLISH_MONTHS.indexOf(month);
 
-  const [startOfMonth, endOfMonth] = getMonthDateRange(nepaliMonth, nepaliYear);
+  const startOfMonth = new Date(year, monthIndex, 1);
+  const endOfMonth = new Date(year, monthIndex + 1, 1);
 
   const result = await Transaction.aggregate([
     {
@@ -136,34 +138,17 @@ async function updateMonthlySummary(userId, date) {
   const totalExpense = result.find(r => r._id === 'expense')?.total || 0;
 
   await MonthlySummary.findOneAndUpdate(
-    { user: userId, nepaliMonth, nepaliYear },
+    { user: userId, month, year },
     {
       user: userId,
-      nepaliMonth,
-      nepaliYear,
+      month,
+      year,
       totalIncome,
       totalExpense,
       balance: totalIncome - totalExpense,
     },
     { upsert: true, new: true }
   );
-}
-
-function getMonthDateRange(nepaliMonth, nepaliYear) {
-  const monthIndex = ['Baishakh', 'Jestha', 'Ashadh', 'Shrawan', 'Bhadra', 'Ashwin', 'Kartik', 'Mangsir', 'Poush', 'Magh', 'Falgun', 'Chaitra'].indexOf(nepaliMonth);
-
-  const gregYear = nepaliYear + 57;
-
-  let startMonth = (monthIndex + 1) % 12 || 12;
-  let startYear = gregYear + (monthIndex === 11 ? 1 : 0);
-  let endMonth = startMonth + 1;
-  let endYear = startYear;
-  if (endMonth > 12) { endMonth = 1; endYear += 1; }
-
-  const startOfMonth = new Date(startYear, startMonth - 1, 1);
-  const endOfMonth = new Date(endYear, endMonth - 1, 1);
-
-  return [startOfMonth, endOfMonth];
 }
 
 module.exports = { getTransactions, getTransaction, createTransaction, updateTransaction, deleteTransaction };

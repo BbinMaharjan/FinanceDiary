@@ -5,6 +5,17 @@ import { useCategories } from '../hooks/useCategories';
 import api from '../services/api';
 import { Button, Card, Input, Select, Alert } from 'antd';
 import { ArrowLeft } from 'lucide-react';
+import type { Transaction, TransactionType, PaymentType, ApiError } from '../types';
+
+interface TransactionFormState {
+  date: string;
+  title: string;
+  amount: string;
+  type: TransactionType;
+  category: string;
+  paymentType: PaymentType;
+  notes: string;
+}
 
 export default function TransactionForm() {
   const { id } = useParams();
@@ -14,7 +25,7 @@ export default function TransactionForm() {
   const { categories: incomeCategories } = useCategories('income');
   const { categories: expenseCategories } = useCategories('expense');
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<TransactionFormState>({
     date: new Date().toISOString().split('T')[0],
     title: '',
     amount: '',
@@ -28,13 +39,13 @@ export default function TransactionForm() {
 
   useEffect(() => {
     if (isEdit && id) {
-      api.get(`/transactions/${id}`).then(({ data }) => {
+      api.get<Transaction>(`/transactions/${id}`).then(({ data }) => {
         setForm({
           date: new Date(data.date).toISOString().split('T')[0],
           title: data.title,
           amount: String(data.amount),
           type: data.type,
-          category: data.category?._id || '',
+          category: typeof data.category === 'object' && '_id' in data.category ? data.category._id : '',
           paymentType: data.paymentType,
           notes: data.notes || '',
         });
@@ -62,26 +73,27 @@ export default function TransactionForm() {
         await createTransaction(payload);
       }
       navigate('/transactions');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to save transaction');
+    } catch (err: unknown) {
+      const apiErr = err as ApiError;
+      setError(apiErr.response?.data?.message || 'Failed to save transaction');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-lg mx-auto space-y-4">
-      <Link to="/transactions" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
-        <ArrowLeft className="size-4" /> Back
+    <div style={{ maxWidth: 640, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <Link to="/transactions" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 14, color: '#8c8c8c', textDecoration: 'none' }}>
+        <ArrowLeft style={{ width: 16, height: 16 }} /> Back
       </Link>
 
-      <h2 className="font-display text-lg font-semibold">{isEdit ? 'Edit Transaction' : 'New Transaction'}</h2>
+      <h2 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>{isEdit ? 'Edit Transaction' : 'New Transaction'}</h2>
 
       {error && <Alert message={error} type="error" showIcon />}
 
-      <Card>
-        <form onSubmit={handleSubmit} className="space-y-4" style={{ padding: 0 }}>
-          <div className="flex gap-2">
+      <Card style={{ borderRadius: 12 }}>
+        <form onSubmit={handleSubmit}>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
             {(['income', 'expense'] as const).map((t) => (
               <Button
                 key={t}
@@ -95,25 +107,25 @@ export default function TransactionForm() {
             ))}
           </div>
 
-          <div>
+          <div style={{ marginBottom: 16 }}>
             <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Date</label>
             <Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} required />
           </div>
 
-          <div>
+          <div style={{ marginBottom: 16 }}>
             <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Title</label>
             <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="What for?" required />
           </div>
 
-          <div>
+          <div style={{ marginBottom: 16 }}>
             <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Amount (रू)</label>
             <Input type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0.00" required />
           </div>
 
-          <div>
+          <div style={{ marginBottom: 16 }}>
             <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Category</label>
             <Select value={form.category || undefined} onChange={(v) => setForm({ ...form, category: v })} style={{ width: '100%' }}>
-              {categories.map((cat: any) => (
+              {categories.map((cat: { _id: string; icon: string; name: string }) => (
                 <Select.Option key={cat._id} value={cat._id}>
                   {cat.icon} {cat.name}
                 </Select.Option>
@@ -121,23 +133,23 @@ export default function TransactionForm() {
             </Select>
           </div>
 
-          <div>
+          <div style={{ marginBottom: 16 }}>
             <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Payment Type</label>
-            <Select value={form.paymentType} onChange={(v) => setForm({ ...form, paymentType: v })} style={{ width: '100%' }}>
-              {['Cash', 'Bank Transfer', 'Card', 'UPI', 'Wallet', 'Other'].map((pt) => (
+            <Select value={form.paymentType} onChange={(v) => setForm({ ...form, paymentType: v as PaymentType })} style={{ width: '100%' }}>
+              {(['Cash', 'Bank Transfer', 'Card', 'Other'] as PaymentType[]).map((pt) => (
                 <Select.Option key={pt} value={pt}>{pt}</Select.Option>
               ))}
             </Select>
           </div>
 
-          <div>
+          <div style={{ marginBottom: 16 }}>
             <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Notes</label>
             <textarea
               value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
               rows={3}
               className="ant-input"
-              style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid var(--border)' }}
+              style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #d9d9d9' }}
             />
           </div>
 
