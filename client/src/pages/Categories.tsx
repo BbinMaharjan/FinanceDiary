@@ -2,12 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { useCategories } from '../hooks/useCategories';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Card, CardContent } from '../components/ui/card';
-import { Skeleton } from '../components/ui/skeleton';
-import { Badge } from '../components/ui/badge';
+import { Button, Input, Card, Skeleton, Tag } from 'antd';
 
 const ICONS = ['💰', '🍔', '🏠', '🚗', '📚', '💊', '👕', '🎮', '✈️', '🎵', '🏋️', '💼', '📱', '🎁', '🏥', '🐾', '🌿', '🔧', '📦', '🛒'];
 const PALETTE = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#84cc16'];
@@ -50,14 +45,14 @@ export default function Categories() {
     <div className="max-w-lg mx-auto space-y-5">
       <div className="flex items-center justify-between">
         <h2 className="font-display text-lg font-semibold">Categories</h2>
-        <Button onClick={() => { setShowForm(true); setEditing(null); setForm({ name: '', icon: '📁', color: '#6b7280' }); }}>
-          <Plus className="size-4 mr-1" /> Add
+        <Button type="primary" icon={<Plus className="size-4" />} onClick={() => { setShowForm(true); setEditing(null); setForm({ name: '', icon: '📁', color: '#6b7280' }); }}>
+          Add
         </Button>
       </div>
 
       <div className="flex gap-2">
         {(['income', 'expense'] as const).map((t) => (
-          <Button key={t} variant={type === t ? 'default' : 'outline'} size="sm" onClick={() => setType(t)}>
+          <Button key={t} type={type === t ? 'primary' : 'default'} size="small" onClick={() => setType(t)}>
             {t.charAt(0).toUpperCase() + t.slice(1)}
           </Button>
         ))}
@@ -66,64 +61,62 @@ export default function Categories() {
       {showForm && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
           <Card>
-            <CardContent className="pt-5 space-y-4">
-              <h3 className="font-medium text-sm">{editing ? 'Edit Category' : 'New Category'}</h3>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Name</Label>
-                  <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Category name" required />
-                </div>
+            <h3 className="font-medium text-sm" style={{ marginBottom: 16 }}>{editing ? 'Edit Category' : 'New Category'}</h3>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Name</label>
+                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Category name" required />
+              </div>
 
-                <div className="space-y-2">
-                  <Label>Icon</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {ICONS.map((icon) => (
-                      <button
-                        key={icon}
-                        type="button"
-                        onClick={() => setForm({ ...form, icon })}
-                        className={`size-9 flex items-center justify-center rounded-lg text-lg transition-all ${form.icon === icon ? 'ring-2 ring-primary bg-primary/10' : 'hover:bg-muted'}`}
-                      >
-                        {icon}
-                      </button>
-                    ))}
-                  </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Icon</label>
+                <div className="flex flex-wrap gap-2">
+                  {ICONS.map((icon) => (
+                    <button
+                      key={icon}
+                      type="button"
+                      onClick={() => setForm({ ...form, icon })}
+                      className={`size-9 flex items-center justify-center rounded-lg text-lg transition-all ${form.icon === icon ? 'ring-2 ring-primary bg-primary/10' : 'hover:bg-muted'}`}
+                    >
+                      {icon}
+                    </button>
+                  ))}
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <Label>Color</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {PALETTE.map((color) => (
-                      <button
-                        key={color}
-                        type="button"
-                        onClick={() => setForm({ ...form, color })}
-                        className={`size-9 rounded-lg transition-all ${form.color === color ? 'ring-2 ring-offset-2 ring-primary' : ''}`}
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
-                  </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Color</label>
+                <div className="flex flex-wrap gap-2">
+                  {PALETTE.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setForm({ ...form, color })}
+                      className={`size-9 rounded-lg transition-all ${form.color === color ? 'ring-2 ring-offset-2 ring-primary' : ''}`}
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
                 </div>
+              </div>
 
-                <div className="flex gap-2">
-                  <Button type="submit">Save</Button>
-                  <Button type="button" variant="outline" onClick={() => { setShowForm(false); setEditing(null); }}>Cancel</Button>
-                </div>
-              </form>
-            </CardContent>
+              <div className="flex gap-2">
+                <Button type="primary" htmlType="submit">Save</Button>
+                <Button onClick={() => { setShowForm(false); setEditing(null); }}>Cancel</Button>
+              </div>
+            </form>
           </Card>
         </motion.div>
       )}
 
       {loading ? (
         <div className="space-y-2">
-          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-14 rounded-xl" />)}
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton.Button key={i} active style={{ height: 56, borderRadius: 12 }} block />)}
         </div>
       ) : categories.length === 0 ? (
         <Card>
-          <CardContent className="p-8 text-center text-muted-foreground">
+          <div style={{ padding: '32px 0', textAlign: 'center', color: 'var(--muted-foreground)' }}>
             No categories yet
-          </CardContent>
+          </div>
         </Card>
       ) : (
         <div className="space-y-2">
@@ -139,16 +132,12 @@ export default function Categories() {
                 <span className="text-lg">{cat.icon}</span>
                 <div>
                   <p className="font-medium text-sm">{cat.name}</p>
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">{cat.type}</Badge>
+                  <Tag>{cat.type}</Tag>
                 </div>
               </div>
               <div className="flex gap-1">
-                <Button variant="ghost" size="icon" onClick={() => handleEdit(cat)}>
-                  <Pencil className="size-3.5" />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => handleDelete(cat._id)} className="hover:text-destructive">
-                  <Trash2 className="size-3.5" />
-                </Button>
+                <Button type="text" icon={<Pencil className="size-3.5" />} onClick={() => handleEdit(cat)} />
+                <Button type="text" danger icon={<Trash2 className="size-3.5" />} onClick={() => handleDelete(cat._id)} />
               </div>
             </motion.div>
           ))}

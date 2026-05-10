@@ -1,27 +1,20 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Card, CardContent, CardFooter } from '../components/ui/card';
-import { Loader2 } from 'lucide-react';
+import { Button, Card, Form, Input, Typography, Alert } from 'antd';
+import { UserOutlined, MailOutlined, LockOutlined } from '@ant-design/icons';
 
 export default function Register() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (values: { name: string; email: string; password: string }) => {
     setError('');
     setLoading(true);
     try {
-      await register(name, email, password);
+      await register(values.name, values.email, values.password);
       navigate('/');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed');
@@ -32,38 +25,32 @@ export default function Register() {
 
   return (
     <Card>
-      <CardContent className="pt-6">
-        <h2 className="font-display text-xl font-semibold mb-6 text-center">Create account</h2>
-        {error && (
-          <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
-            {error}
-          </div>
-        )}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
-            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" minLength={6} required />
-          </div>
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading && <Loader2 className="size-4 animate-spin" />}
+      <Typography.Title level={3} style={{ textAlign: 'center', marginBottom: 24 }}>
+        Create account
+      </Typography.Title>
+      {error && <Alert message={error} type="error" showIcon style={{ marginBottom: 16 }} />}
+      <Form onFinish={handleSubmit} layout="vertical" requiredMark={false}>
+        <Form.Item label="Name" name="name" rules={[{ required: true, message: 'Please enter your name' }]}>
+          <Input prefix={<UserOutlined />} placeholder="Your name" size="large" />
+        </Form.Item>
+        <Form.Item label="Email" name="email" rules={[{ required: true, message: 'Please enter your email' }, { type: 'email' }]}>
+          <Input prefix={<MailOutlined />} placeholder="you@example.com" size="large" />
+        </Form.Item>
+        <Form.Item label="Password" name="password" rules={[{ required: true, message: 'Please enter your password' }, { min: 6, message: 'At least 6 characters' }]}>
+          <Input.Password prefix={<LockOutlined />} placeholder="At least 6 characters" size="large" />
+        </Form.Item>
+        <Form.Item>
+          <Button type="primary" htmlType="submit" loading={loading} block size="large">
             {loading ? 'Creating account...' : 'Create account'}
           </Button>
-        </form>
-      </CardContent>
-      <CardFooter className="justify-center pb-6">
-        <p className="text-sm text-muted-foreground">
+        </Form.Item>
+      </Form>
+      <div style={{ textAlign: 'center' }}>
+        <Typography.Text type="secondary">
           Already have an account?{' '}
-          <Link to="/login" className="text-primary font-medium hover:underline">Sign in</Link>
-        </p>
-      </CardFooter>
+          <Link to="/login">Sign in</Link>
+        </Typography.Text>
+      </div>
     </Card>
   );
 }

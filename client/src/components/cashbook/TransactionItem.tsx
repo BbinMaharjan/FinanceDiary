@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
-import { ArrowDownRight, ArrowUpRight, Trash2 } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { Trash2 } from 'lucide-react';
+import { Typography, theme } from 'antd';
 
 const CATEGORY_EMOJIS: Record<string, string> = {
   salary: '💼', freelance: '💻', business: '🏪', gift: '🎁', investment: '📈',
@@ -20,6 +20,7 @@ interface Props {
 }
 
 export function TransactionItem({ title, amount, type, date, categoryName, paymentType, onDelete, index = 0 }: Props) {
+  const { token } = theme.useToken();
   const emoji = CATEGORY_EMOJIS[categoryName?.toLowerCase() || ''] || '📄';
 
   return (
@@ -27,29 +28,75 @@ export function TransactionItem({ title, amount, type, date, categoryName, payme
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03, duration: 0.3 }}
-      className="flex items-center justify-between p-3 rounded-xl hover:bg-muted/60 transition-colors group"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '8px 12px',
+        borderRadius: 12,
+        transition: 'background 0.2s',
+        cursor: 'default',
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.background = token.colorFillTertiary; }}
+      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
     >
-      <div className="flex items-center gap-3 min-w-0 flex-1">
-        <span className="text-lg flex-shrink-0">{emoji}</span>
-        <div className="min-w-0">
-          <p className="font-medium text-sm truncate">{title}</p>
-          <p className="text-xs text-muted-foreground truncate">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0, flex: 1 }}>
+        <span style={{ fontSize: 18, flexShrink: 0 }}>{emoji}</span>
+        <div style={{ minWidth: 0 }}>
+          <Typography.Text
+            style={{ fontSize: 14, fontWeight: 500, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+          >
+            {title}
+          </Typography.Text>
+          <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             {categoryName ? ` • ${categoryName}` : ''}
             {paymentType ? ` • ${paymentType}` : ''}
-          </p>
+          </Typography.Text>
         </div>
       </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
-        <span className={cn('font-semibold text-sm tabular-nums', type === 'income' ? 'text-income' : 'text-expense')}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+        <Typography.Text
+          style={{
+            fontSize: 14,
+            fontWeight: 600,
+            fontVariantNumeric: 'tabular-nums',
+            color: type === 'income' ? '#22c55e' : '#f97316',
+          }}
+        >
           {type === 'income' ? '+' : '-'}रू {amount.toLocaleString('en-IN')}
-        </span>
+        </Typography.Text>
         {onDelete && (
-          <button onClick={onDelete} className="p-1.5 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-destructive transition-all">
-            <Trash2 className="size-3.5" />
+          <button
+            onClick={onDelete}
+            style={{
+              padding: 6,
+              color: token.colorTextSecondary,
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              opacity: 0,
+              transition: 'opacity 0.2s',
+              borderRadius: 6,
+            }}
+            className="delete-btn"
+            onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = token.colorErrorBg; e.currentTarget.style.color = token.colorError; }}
+            onMouseLeave={(e) => { e.currentTarget.style.opacity = '0'; e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = token.colorTextSecondary; }}
+          >
+            <Trash2 style={{ width: 14, height: 14 }} />
           </button>
         )}
       </div>
+
+      <style>{`
+        .delete-btn {
+          opacity: 0;
+        }
+        .delete-btn:hover {
+          background: ${token.colorErrorBg} !important;
+          color: ${token.colorError} !important;
+        }
+      `}</style>
     </motion.div>
   );
 }

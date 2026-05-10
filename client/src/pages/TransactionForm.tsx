@@ -3,12 +3,8 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useTransactions } from '../hooks/useTransactions';
 import { useCategories } from '../hooks/useCategories';
 import api from '../services/api';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../components/ui/select';
-import { Card, CardContent } from '../components/ui/card';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Button, Card, Input, Select, Alert } from 'antd';
+import { ArrowLeft } from 'lucide-react';
 
 export default function TransactionForm() {
   const { id } = useParams();
@@ -81,91 +77,74 @@ export default function TransactionForm() {
 
       <h2 className="font-display text-lg font-semibold">{isEdit ? 'Edit Transaction' : 'New Transaction'}</h2>
 
-      {error && (
-        <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
-          {error}
-        </div>
-      )}
+      {error && <Alert message={error} type="error" showIcon />}
 
       <Card>
-        <CardContent className="pt-6 space-y-4">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="flex gap-2">
-              {(['income', 'expense'] as const).map((t) => (
-                <Button
-                  key={t}
-                  type="button"
-                  variant={form.type === t ? (t === 'income' ? 'default' : 'destructive') : 'outline'}
-                  className="flex-1"
-                  onClick={() => setForm({ ...form, type: t, category: '' })}
-                >
-                  {t.charAt(0).toUpperCase() + t.slice(1)}
-                </Button>
+        <form onSubmit={handleSubmit} className="space-y-4" style={{ padding: 0 }}>
+          <div className="flex gap-2">
+            {(['income', 'expense'] as const).map((t) => (
+              <Button
+                key={t}
+                type={form.type === t ? 'primary' : 'default'}
+                danger={form.type === t && t === 'expense'}
+                onClick={() => setForm({ ...form, type: t, category: '' })}
+                style={{ flex: 1 }}
+              >
+                {t.charAt(0).toUpperCase() + t.slice(1)}
+              </Button>
+            ))}
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Date</label>
+            <Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} required />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Title</label>
+            <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="What for?" required />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Amount (रू)</label>
+            <Input type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0.00" required />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Category</label>
+            <Select value={form.category || undefined} onChange={(v) => setForm({ ...form, category: v })} style={{ width: '100%' }}>
+              {categories.map((cat: any) => (
+                <Select.Option key={cat._id} value={cat._id}>
+                  {cat.icon} {cat.name}
+                </Select.Option>
               ))}
-            </div>
+            </Select>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="date">Date</Label>
-              <Input id="date" type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} required />
-            </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Payment Type</label>
+            <Select value={form.paymentType} onChange={(v) => setForm({ ...form, paymentType: v })} style={{ width: '100%' }}>
+              {['Cash', 'Bank Transfer', 'Card', 'UPI', 'Wallet', 'Other'].map((pt) => (
+                <Select.Option key={pt} value={pt}>{pt}</Select.Option>
+              ))}
+            </Select>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
-              <Input id="title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="What for?" required />
-            </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Notes</label>
+            <textarea
+              value={form.notes}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              rows={3}
+              className="ant-input"
+              style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid var(--border)' }}
+            />
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="amount">Amount (रू)</Label>
-              <Input id="amount" type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0.00" required />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Category</Label>
-              <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat: any) => (
-                    <SelectItem key={cat._id} value={cat._id}>
-                      {cat.icon} {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Payment Type</Label>
-              <Select value={form.paymentType} onValueChange={(v) => setForm({ ...form, paymentType: v })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {['Cash', 'Bank Transfer', 'Card', 'UPI', 'Wallet', 'Other'].map((pt) => (
-                    <SelectItem key={pt} value={pt}>{pt}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notes</Label>
-              <textarea
-                id="notes"
-                value={form.notes}
-                onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                rows={3}
-                className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              />
-            </div>
-
-            <Button type="submit" disabled={loading} className="w-full">
-              {loading && <Loader2 className="size-4 animate-spin" />}
-              {loading ? 'Saving...' : isEdit ? 'Update Transaction' : 'Add Transaction'}
-            </Button>
-          </form>
-        </CardContent>
+          <Button type="primary" htmlType="submit" loading={loading} block>
+            {loading ? 'Saving...' : isEdit ? 'Update Transaction' : 'Add Transaction'}
+          </Button>
+        </form>
       </Card>
     </div>
   );

@@ -2,11 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Download } from 'lucide-react';
 import api from '../services/api';
-import { Button } from '../components/ui/button';
-import { Card, CardContent } from '../components/ui/card';
-import { Skeleton } from '../components/ui/skeleton';
-import { Badge } from '../components/ui/badge';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../components/ui/select';
+import { Button, Card, Select, Skeleton, Tag } from 'antd';
 
 const NEPALI_MONTHS = ['Baishakh', 'Jestha', 'Ashadh', 'Shrawan', 'Bhadra', 'Ashwin', 'Kartik', 'Mangsir', 'Poush', 'Magh', 'Falgun', 'Chaitra'];
 
@@ -78,19 +74,12 @@ export default function MonthlyBook() {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h2 className="font-display text-lg font-semibold">Cash Book</h2>
         <div className="flex items-center gap-2">
-          <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>
-            <SelectTrigger className="w-[100px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 57 - 5 + i).map((y) => (
-                <SelectItem key={y} value={String(y)}>{y}</SelectItem>
-              ))}
-            </SelectContent>
+          <Select value={String(year)} onChange={(v) => setYear(Number(v))} style={{ width: 100 }}>
+            {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 57 - 5 + i).map((y) => (
+              <Select.Option key={y} value={String(y)}>{y}</Select.Option>
+            ))}
           </Select>
-          <Button variant="outline" size="icon" onClick={handleDownload}>
-            <Download className="size-4" />
-          </Button>
+          <Button icon={<Download className="size-4" />} onClick={handleDownload} />
         </div>
       </div>
 
@@ -98,10 +87,9 @@ export default function MonthlyBook() {
         {NEPALI_MONTHS.map((month) => (
           <Button
             key={month}
-            variant={selectedMonth === month ? 'default' : 'outline'}
-            size="sm"
+            type={selectedMonth === month ? 'primary' : 'default'}
+            size="small"
             onClick={() => setSelectedMonth(month)}
-            className="whitespace-nowrap"
           >
             {month}
           </Button>
@@ -110,17 +98,14 @@ export default function MonthlyBook() {
 
       {loading ? (
         <div className="grid grid-cols-1 gap-4">
-          <Skeleton className="h-32 rounded-xl" />
-          <Skeleton className="h-48 rounded-xl" />
+          <Skeleton.Button active style={{ height: 128, borderRadius: 12 }} block />
+          <Skeleton.Button active style={{ height: 192, borderRadius: 12 }} block />
         </div>
       ) : currentSummary ? (
         <>
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
             <Card>
-              <CardContent className="p-5 grid grid-cols-3 gap-4 text-center">
+              <div className="grid grid-cols-3 gap-4 text-center" style={{ padding: '12px 0' }}>
                 {[
                   { label: 'Income', value: currentSummary.totalIncome, color: 'text-income' },
                   { label: 'Expense', value: currentSummary.totalExpense, color: 'text-expense' },
@@ -133,14 +118,14 @@ export default function MonthlyBook() {
                     </p>
                   </div>
                 ))}
-              </CardContent>
+              </div>
             </Card>
           </motion.div>
 
           {txLoading ? (
             <div className="space-y-2">
               {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="h-14 rounded-xl" />
+                <Skeleton.Button key={i} active style={{ height: 56, borderRadius: 12 }} block />
               ))}
             </div>
           ) : monthTransactions.length > 0 && (
@@ -166,42 +151,37 @@ export default function MonthlyBook() {
         </>
       ) : (
         <Card>
-          <CardContent className="p-8 text-center">
+          <div style={{ padding: '32px 0', textAlign: 'center' }}>
             <p className="text-muted-foreground mb-1">No data for {selectedMonth}</p>
             <p className="text-sm text-muted-foreground">Add transactions to see your monthly summary</p>
-          </CardContent>
+          </div>
         </Card>
       )}
 
       {summaries.length > 0 && (
-        <Card>
-          <div className="px-5 pt-5">
-            <h3 className="font-display font-semibold text-sm">All Monthly Summaries</h3>
-          </div>
-          <CardContent className="p-5">
-            {summaries.length === 0 ? (
-              <p className="text-center py-4 text-muted-foreground text-sm">No summaries available</p>
-            ) : (
-              <div className="space-y-2">
-                {summaries.map((s: any) => (
-                  <div
-                    key={`${s.nepaliMonth}-${s.nepaliYear}`}
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors text-sm cursor-pointer"
-                    onClick={() => setSelectedMonth(s.nepaliMonth)}
-                  >
-                    <span className="font-medium">{s.nepaliMonth} {s.nepaliYear}</span>
-                    <div className="flex gap-3 text-xs tabular-nums">
-                      <span className="text-income">+रू {s.totalIncome.toLocaleString('en-IN')}</span>
-                      <span className="text-expense">-रू {s.totalExpense.toLocaleString('en-IN')}</span>
-                      <span className={s.balance >= 0 ? 'text-balance font-medium' : 'text-destructive font-medium'}>
-                        रू {s.balance.toLocaleString('en-IN')}
-                      </span>
-                    </div>
+        <Card title="All Monthly Summaries">
+          {summaries.length === 0 ? (
+            <p className="text-center py-4 text-muted-foreground text-sm">No summaries available</p>
+          ) : (
+            <div className="space-y-2">
+              {summaries.map((s: any) => (
+                <div
+                  key={`${s.nepaliMonth}-${s.nepaliYear}`}
+                  className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors text-sm cursor-pointer"
+                  onClick={() => setSelectedMonth(s.nepaliMonth)}
+                >
+                  <span className="font-medium">{s.nepaliMonth} {s.nepaliYear}</span>
+                  <div className="flex gap-3 text-xs tabular-nums">
+                    <span className="text-income">+रू {s.totalIncome.toLocaleString('en-IN')}</span>
+                    <span className="text-expense">-रू {s.totalExpense.toLocaleString('en-IN')}</span>
+                    <span className={s.balance >= 0 ? 'text-balance font-medium' : 'text-destructive font-medium'}>
+                      रू {s.balance.toLocaleString('en-IN')}
+                    </span>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
       )}
     </div>

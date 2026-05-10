@@ -7,7 +7,12 @@ const getDashboard = async (req, res, next) => {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfYear = new Date(now.getFullYear(), 0, 1);
 
-    const [monthlyStats, yearlyStats, recentTransactions] = await Promise.all([
+    // Last 14 days for cash flow
+    const fourteenDaysAgo = new Date(now);
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 13);
+    fourteenDaysAgo.setHours(0, 0, 0, 0);
+
+    const [monthlyStats, yearlyStats, recentTransactions, dailyCashFlow, categoryBreakdown] = await Promise.all([
       Transaction.aggregate([
         { $match: { user: req.user._id, date: { $gte: startOfMonth, $lte: now } } },
         { $group: { _id: '$type', total: { $sum: '$amount' } } },
@@ -20,12 +25,74 @@ const getDashboard = async (req, res, next) => {
         .populate('category', 'name icon color')
         .sort({ date: -1 })
         .limit(5),
+      Transaction.aggregate([
+        { $match: { user: req.user._id, date: { $gte: fourteenDaysAgo, $lte: now } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%Y-%m-%d', date: '$date' } },
+            income: { $sum: { $cond: [{ $eq: ['$type', 'income'] }, '$amount', 0] } },
+            expense: { $sum: { $cond: [{ $eq: ['$type', 'expense'] }, '$amount', 0] } },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]),
+      Transaction.aggregate([
+        {
+          $match: {
+            user: req.user._id,
+            type: 'expense',
+            date: { $gte: startOfMonth, $lte: now },
+          },
+        },
+        { $group: { _id: '$category', total: { $sum: '$amount' } } },
+        {
+          $lookup: {
+            from: 'categories',
+            localField: '_id',
+            foreignField: '_id',
+            as: 'categoryInfo',
+          },
+        },
+        { $unwind: { path: '$categoryInfo', preserveNullAndEmptyArrays: true } },
+        { $sort: { total: -1 } },
+      ]),
     ]);
 
     const monthlyIncome = monthlyStats.find(s => s._id === 'income')?.total || 0;
     const monthlyExpense = monthlyStats.find(s => s._id === 'expense')?.total || 0;
     const yearlyIncome = yearlyStats.find(s => s._id === 'income')?.total || 0;
     const yearlyExpense = yearlyStats.find(s => s._id === 'expense')?.total || 0;
+
+    // Compute last month stats for delta
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+    const lastMonthStats = await Transaction.aggregate([
+      { $match: { user: req.user._id, date: { $gte: lastMonthStart, $lte: lastMonthEnd } } },
+      { $group: { _id: '$type', total: { $sum: '$amount' } } },
+    ]);
+
+    const lastMonthIncome = lastMonthStats.find(s => s._id === 'income')?.total || 0;
+    const lastMonthExpense = lastMonthStats.find(s => s._id === 'expense')?.total || 0;
+
+    // Generate full 14-day range filling gaps with 0
+    const cashFlowMap = {};
+    dailyCashFlow.forEach(d => { cashFlowMap[d._id] = { income: d.income, expense: d.expense }; });
+    const cashFlow = [];
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(fourteenDaysAgo);
+      d.setDate(d.getDate() + i);
+      const key = d.toISOString().split('T')[0];
+      cashFlow.push({
+        date: key,
+        income: cashFlowMap[key]?.income || 0,
+        expense: cashFlowMap[key]?.expense || 0,
+      });
+    }
+
+    const breakdown = categoryBreakdown.map(c => ({
+      categoryName: c.categoryInfo?.name || 'Other',
+      total: c.total,
+    }));
 
     res.json({
       monthlyIncome,
@@ -34,7 +101,11 @@ const getDashboard = async (req, res, next) => {
       yearlyIncome,
       yearlyExpense,
       yearlyBalance: yearlyIncome - yearlyExpense,
+      lastMonthIncome,
+      lastMonthExpense,
       recentTransactions,
+      cashFlow,
+      spendingBreakdown: breakdown,
     });
   } catch (error) {
     next(error);

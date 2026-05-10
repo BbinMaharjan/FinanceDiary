@@ -2,10 +2,7 @@ import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useTransactions } from '../hooks/useTransactions';
 import { TransactionItem } from '../components/cashbook/TransactionItem';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../components/ui/select';
-import { Skeleton } from '../components/ui/skeleton';
+import { Button, Input, Select, Skeleton } from 'antd';
 import { Plus, Search } from 'lucide-react';
 
 interface Props {
@@ -46,11 +43,9 @@ export default function Transactions({ type: routeType }: Props) {
         <h2 className="font-display text-lg font-semibold">
           {routeType === 'income' ? 'Income' : routeType === 'expense' ? 'Expense' : 'All'} Transactions
         </h2>
-        <Button asChild>
-          <Link to="/transactions/new">
-            <Plus className="size-4" /> Add
-          </Link>
-        </Button>
+        <Link to="/transactions/new">
+          <Button type="primary" icon={<Plus className="size-4" />}>Add</Button>
+        </Link>
       </div>
 
       <form onSubmit={handleSearch} className="relative">
@@ -59,63 +54,65 @@ export default function Transactions({ type: routeType }: Props) {
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           placeholder="Search transactions..."
-          className="pl-9"
+          style={{ paddingLeft: 36 }}
         />
       </form>
 
       <div className="flex gap-2 overflow-x-auto pb-2">
         {!routeType && (
-          <Select value={effectiveType} onValueChange={(v) => setFilter('type', v)}>
-            <SelectTrigger className="w-[130px]">
-              <SelectValue placeholder="All Types" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">All Types</SelectItem>
-              <SelectItem value="income">Income</SelectItem>
-              <SelectItem value="expense">Expense</SelectItem>
-            </SelectContent>
+          <Select
+            value={effectiveType || undefined}
+            onChange={(v) => setFilter('type', v || '')}
+            placeholder="All Types"
+            style={{ width: 130 }}
+            allowClear
+          >
+            <Select.Option value="">All Types</Select.Option>
+            <Select.Option value="income">Income</Select.Option>
+            <Select.Option value="expense">Expense</Select.Option>
           </Select>
         )}
-        <Select value={params.paymentType || ''} onValueChange={(v) => setFilter('paymentType', v)}>
-          <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="Payment" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">All Payment</SelectItem>
-            <SelectItem value="Cash">Cash</SelectItem>
-            <SelectItem value="Bank Transfer">Bank</SelectItem>
-            <SelectItem value="Card">Card</SelectItem>
-            <SelectItem value="UPI">UPI</SelectItem>
-            <SelectItem value="Wallet">Wallet</SelectItem>
-            <SelectItem value="Other">Other</SelectItem>
-          </SelectContent>
+        <Select
+          value={params.paymentType || undefined}
+          onChange={(v) => setFilter('paymentType', v || '')}
+          placeholder="Payment"
+          style={{ width: 140 }}
+          allowClear
+        >
+          <Select.Option value="">All Payment</Select.Option>
+          <Select.Option value="Cash">Cash</Select.Option>
+          <Select.Option value="Bank Transfer">Bank</Select.Option>
+          <Select.Option value="Card">Card</Select.Option>
+          <Select.Option value="UPI">UPI</Select.Option>
+          <Select.Option value="Wallet">Wallet</Select.Option>
+          <Select.Option value="Other">Other</Select.Option>
         </Select>
         <Input
           type="date"
           value={params.startDate || ''}
           onChange={(e) => setFilter('startDate', e.target.value)}
-          className="w-[140px]"
+          style={{ width: 140 }}
         />
         <Input
           type="date"
           value={params.endDate || ''}
           onChange={(e) => setFilter('endDate', e.target.value)}
-          className="w-[140px]"
+          style={{ width: 140 }}
         />
       </div>
 
       {loading ? (
         <div className="space-y-2">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 rounded-xl" />
+            <Skeleton.Button key={i} active style={{ height: 64, borderRadius: 12 }} block />
           ))}
         </div>
       ) : transactions.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground mb-2">No transactions found</p>
-          <Button asChild variant="link">
-            <Link to="/transactions/new">Add your first transaction</Link>
-          </Button>
+          <Link to="/transactions/new">
+            <Button type="link">Add your first transaction</Button>
+          </Link>
         </div>
       ) : (
         <>
@@ -153,8 +150,8 @@ export default function Transactions({ type: routeType }: Props) {
               {Array.from({ length: pages }).map((_, i) => (
                 <Button
                   key={i}
-                  variant={page === i + 1 ? 'default' : 'outline'}
-                  size="sm"
+                  type={page === i + 1 ? 'primary' : 'default'}
+                  size="small"
                   onClick={() => setFilter('page', String(i + 1))}
                 >
                   {i + 1}

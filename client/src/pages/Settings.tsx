@@ -4,13 +4,7 @@ import { Moon, Sun, Download, LogOut, User, Save } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import api from '../services/api';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Card, CardContent } from '../components/ui/card';
-import { Switch } from '../components/ui/switch';
-import { Separator } from '../components/ui/separator';
-import { Avatar, AvatarFallback } from '../components/ui/avatar';
+import { Button, Card, Input, Switch, Divider, Avatar, Alert, Typography } from 'antd';
 
 export default function Settings() {
   const { user, logout } = useAuth();
@@ -42,91 +36,78 @@ export default function Settings() {
 
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
         <Card>
-          <CardContent className="pt-6 space-y-4">
-            <div className="flex items-center gap-4">
-              <Avatar className="size-14">
-                <AvatarFallback className="bg-gradient-to-br from-[var(--primary)] to-blue-500 text-primary-foreground font-semibold">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-medium">{user?.name}</p>
-                <p className="text-sm text-muted-foreground">{user?.email}</p>
-              </div>
+          <div className="flex items-center gap-4" style={{ marginBottom: 16 }}>
+            <Avatar size={56} style={{ backgroundColor: 'var(--primary)', verticalAlign: 'middle', fontSize: 20, fontWeight: 600 }}>
+              {initials}
+            </Avatar>
+            <div>
+              <p className="font-medium">{user?.name}</p>
+              <p className="text-sm text-muted-foreground">{user?.email}</p>
             </div>
+          </div>
 
-            <Separator />
+          <Divider />
 
-            <form onSubmit={handleSave} className="space-y-4">
-              <h4 className="font-medium text-sm flex items-center gap-2">
-                <User className="size-4" /> Profile
-              </h4>
+          <form onSubmit={handleSave} className="space-y-4">
+            <h4 className="font-medium text-sm flex items-center gap-2">
+              <User className="size-4" /> Profile
+            </h4>
 
-              {message && (
-                <div className={`p-3 rounded-lg text-sm ${message === 'Profile updated' ? 'bg-income/10 text-income' : 'bg-destructive/10 text-destructive'}`}>
-                  {message}
-                </div>
-              )}
+            {message && (
+              <Alert message={message} type={message === 'Profile updated' ? 'success' : 'error'} showIcon />
+            )}
 
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-              </div>
-              <Button type="submit" disabled={saving}>
-                <Save className="size-4 mr-1" />
-                {saving ? 'Saving...' : 'Save Changes'}
-              </Button>
-            </form>
-          </CardContent>
+            <div>
+              <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Name</label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Email</label>
+              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            </div>
+            <Button type="primary" htmlType="submit" loading={saving} icon={<Save className="size-4" />}>
+              {saving ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </form>
         </Card>
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
         <Card>
-          <CardContent className="pt-6 space-y-4">
-            <h4 className="font-medium text-sm flex items-center gap-2">
-              {dark ? <Moon className="size-4" /> : <Sun className="size-4" />} Appearance
-            </h4>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Dark Mode</p>
-                <p className="text-xs text-muted-foreground">Switch between light and dark theme</p>
-              </div>
-              <Switch checked={dark} onCheckedChange={toggleTheme} />
+          <h4 className="font-medium text-sm flex items-center gap-2" style={{ marginBottom: 16 }}>
+            {dark ? <Moon className="size-4" /> : <Sun className="size-4" />} Appearance
+          </h4>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Dark Mode</p>
+              <p className="text-xs text-muted-foreground">Switch between light and dark theme</p>
             </div>
-          </CardContent>
+            <Switch checked={dark} onChange={toggleTheme} />
+          </div>
         </Card>
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
         <Card>
-          <CardContent className="pt-6 space-y-4">
-            <h4 className="font-medium text-sm flex items-center gap-2">
-              <Download className="size-4" /> Export Data
-            </h4>
-            <div className="flex gap-2">
-              <Button variant="outline" className="flex-1" onClick={() => window.open('/api/export/excel', '_blank')}>
-                <Download className="size-4 mr-1" /> Excel
-              </Button>
-              <Button variant="outline" className="flex-1" onClick={() => window.open('/api/export/pdf', '_blank')}>
-                <Download className="size-4 mr-1" /> PDF
-              </Button>
-            </div>
-          </CardContent>
+          <h4 className="font-medium text-sm flex items-center gap-2" style={{ marginBottom: 16 }}>
+            <Download className="size-4" /> Export Data
+          </h4>
+          <div className="flex gap-2">
+            <Button icon={<Download className="size-4" />} onClick={() => window.open('/api/export/excel', '_blank')} style={{ flex: 1 }}>
+              Excel
+            </Button>
+            <Button icon={<Download className="size-4" />} onClick={() => window.open('/api/export/pdf', '_blank')} style={{ flex: 1 }}>
+              PDF
+            </Button>
+          </div>
         </Card>
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
         <Card>
-          <CardContent className="pt-6">
-            <Button variant="destructive" className="w-full" onClick={logout}>
-              <LogOut className="size-4 mr-1" /> Sign out
-            </Button>
-          </CardContent>
+          <Button danger block icon={<LogOut className="size-4" />} onClick={logout}>
+            Sign out
+          </Button>
         </Card>
       </motion.div>
     </div>

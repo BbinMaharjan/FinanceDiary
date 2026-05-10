@@ -1,13 +1,13 @@
 import { motion } from 'framer-motion';
 import { ArrowDownRight, ArrowUpRight, Wallet } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { Card, Typography } from 'antd';
 
 type Variant = 'income' | 'expense' | 'balance';
 
-const GRADIENTS: Record<Variant, string> = {
-  income: 'bg-gradient-to-br from-green-500 to-teal-500',
-  expense: 'bg-gradient-to-br from-orange-500 to-amber-500',
-  balance: 'bg-gradient-to-br from-blue-500 to-violet-500',
+const GRADIENTS: Record<Variant, { bg: string; iconBg: string }> = {
+  income: { bg: 'linear-gradient(135deg, #22c55e, #14b8a6)', iconBg: 'rgba(255,255,255,0.2)' },
+  expense: { bg: 'linear-gradient(135deg, #f97316, #f59e0b)', iconBg: 'rgba(255,255,255,0.2)' },
+  balance: { bg: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', iconBg: 'rgba(255,255,255,0.2)' },
 };
 
 const ICONS: Record<Variant, typeof Wallet> = {
@@ -33,21 +33,69 @@ export function StatCard({ label, amount, variant, delta, index = 0 }: Props) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.06, duration: 0.4, ease: 'easeOut' }}
-      className={cn('relative overflow-hidden rounded-2xl p-5 text-white', GRADIENTS[variant])}
     >
-      <div className="absolute -right-6 -top-6 size-32 rounded-full bg-white/10 blur-2xl" />
-      <div className="relative flex items-start justify-between">
-        <div className="space-y-1">
-          <p className="text-sm font-medium opacity-90">{label}</p>
-          <p className="font-display text-2xl md:text-3xl font-bold tracking-tight">{formatted}</p>
-          {typeof delta === 'number' && (
-            <p className="text-xs opacity-85">{delta > 0 ? '+' : ''}{delta}% vs last month</p>
-          )}
+      <Card
+        style={{
+          background: GRADIENTS[variant].bg,
+          borderRadius: 16,
+          border: 'none',
+          overflow: 'hidden',
+          position: 'relative',
+        }}
+        bodyStyle={{ padding: 20 }}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            right: -24,
+            top: -24,
+            width: 128,
+            height: 128,
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.1)',
+            filter: 'blur(32px)',
+          }}
+        />
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', position: 'relative' }}>
+          <div>
+            <Typography.Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 13, fontWeight: 500, display: 'block', marginBottom: 4 }}>
+              {label}
+            </Typography.Text>
+            <Typography.Title
+              level={3}
+              style={{
+                color: '#fff',
+                margin: 0,
+                fontSize: 28,
+                fontWeight: 700,
+                letterSpacing: '-0.02em',
+              }}
+            >
+              {formatted}
+            </Typography.Title>
+            {typeof delta === 'number' && (
+              <Typography.Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 11 }}>
+                {delta > 0 ? '+' : ''}{delta}% vs last month
+              </Typography.Text>
+            )}
+          </div>
+          <div
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 12,
+              background: 'rgba(255,255,255,0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backdropFilter: 'blur(4px)',
+              flexShrink: 0,
+            }}
+          >
+            <Icon style={{ width: 20, height: 20, color: '#fff' }} />
+          </div>
         </div>
-        <div className="size-10 rounded-xl bg-white/20 grid place-items-center backdrop-blur-sm shrink-0">
-          <Icon className="size-5" />
-        </div>
-      </div>
+      </Card>
     </motion.div>
   );
 }
