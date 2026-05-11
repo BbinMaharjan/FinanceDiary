@@ -220,4 +220,45 @@ const getCategoryReport = async (req, res, next) => {
   }
 };
 
-module.exports = { getDashboard, getMonthlySummaries, getYearlyReport, getCategoryReport };
+const getDailySummary = async (req, res, next) => {
+  try {
+    const { date } = req.query;
+    if (!date) {
+      return res.status(400).json({ message: 'Date query parameter is required' });
+    }
+
+    const dayStart = new Date(date);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(date);
+    dayEnd.setHours(23, 59, 59, 999);
+
+    const filter = { user: req.user._id, date: { $gte: dayStart, $lte: dayEnd } };
+
+    const [stats, transactions] = await Promise.all([
+      Transaction.aggregate([
+        { $match: filter },
+        { $group: { _id: '$type', total: { $sum: '$amount' } } },
+      ]),
+      Transaction.find(filter)
+        .populate('category', 'name icon color')
+        .sort({ createdAt: -1 }),
+    ]);
+
+    const totalIncome = stats.find(s => s._id === 'income')?.total || 0;
+    const totalExpense = stats.find(s => s._id === 'expense')?.total || 0;
+    const balance = totalIncome - totalExpense;
+
+    res.json({
+      date,
+      totalIncome,
+      totalExpense,
+      balance,
+      transactionCount: transactions.length,
+      transactions,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { getDashboard, getMonthlySummaries, getYearlyReport, getCategoryReport, getDailySummary };

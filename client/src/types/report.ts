@@ -15,6 +15,17 @@ export interface YearlyReportData {
   categoryBreakdown: Record<string, unknown>[];
 }
 
+import type { Transaction } from './transaction';
+
+export interface DailySummary {
+  date: string;
+  totalIncome: number;
+  totalExpense: number;
+  balance: number;
+  transactionCount: number;
+  transactions: Transaction[];
+}
+
 export interface CategoryReportItem {
   _id: string;
   total: number;

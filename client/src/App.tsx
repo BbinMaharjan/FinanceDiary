@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import Transactions from "./pages/Transactions";
 import TransactionForm from "./pages/TransactionForm";
 import MonthlyBook from "./pages/MonthlyBook";
+import DailySummary from "./pages/DailySummary";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Categories from "./pages/Categories";
@@ -26,6 +27,7 @@ export default function App() {
         <Route path="/transactions/new" element={<TransactionForm />} />
         <Route path="/transactions/edit/:id" element={<TransactionForm />} />
         <Route path="/monthly-book" element={<MonthlyBook />} />
+        <Route path="/daily-summary" element={<DailySummary />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/categories" element={<Categories />} />
         <Route path="/settings" element={<Settings />} />

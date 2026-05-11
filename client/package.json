@@ -12,9 +12,9 @@
   "dependencies": {
     "@ant-design/icons": "^6.2.2",
     "antd": "^6.3.7",
-    "@ant-design/icons": "^6.2.2",
     "axios": "^1.16.0",
     "clsx": "^2.1.1",
+    "dayjs": "^1.11.20",
     "framer-motion": "^12.38.0",
     "jspdf": "^4.2.1",
     "lucide-react": "^1.14.0",

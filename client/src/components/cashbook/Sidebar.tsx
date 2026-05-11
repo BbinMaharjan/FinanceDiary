@@ -7,12 +7,14 @@ import {
   BarChart3,
   Settings,
   Tags,
+  CalendarDays,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { Typography, theme } from "antd";
 
 const NAV_ITEMS = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/daily-summary", label: "Daily Summary", icon: CalendarDays },
   { to: "/income", label: "Income", icon: ArrowDownCircle },
   { to: "/expense", label: "Expense", icon: ArrowUpCircle },
   { to: "/monthly-book", label: "Cash Book", icon: BookOpen },
