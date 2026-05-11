@@ -18,12 +18,6 @@ export default function AuthLayout() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="font-display text-2xl font-bold">Daily Cash Book</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Track your finances effortlessly
-          </p>
-        </div>
         <Outlet />
       </div>
     </div>
