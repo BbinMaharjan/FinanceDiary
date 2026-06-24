@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
-import { Button, Form, Input, Typography, Alert, Checkbox, Card } from "antd";
-import { Mail, Lock, ArrowRight, Eye, EyeOff, Wallet } from "lucide-react";
+import { Button, Form, Input, Typography, Alert } from "antd";
+import { Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
 import type { ApiError } from "../types";
 import { motion } from "framer-motion";
+import styled from "styled-components";
 
 const GRADIENT = {
   from: "#346fde",
@@ -13,35 +14,151 @@ const GRADIENT = {
   to: "#007cd6",
 };
 
+const PageContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  overflow: hidden;
+`;
+
+const GlowBlob = styled.div<{
+  $top?: string;
+  $left?: string;
+  $bottom?: string;
+  $right?: string;
+  $size?: string;
+}>`
+  position: absolute;
+  ${({ $top }) => $top && `top: ${$top};`}
+  ${({ $left }) => $left && `left: ${$left};`}
+  ${({ $bottom }) => $bottom && `bottom: ${$bottom};`}
+  ${({ $right }) => $right && `right: ${$right};`}
+  width: ${({ $size }) => $size ?? "24rem"};
+  height: ${({ $size }) => $size ?? "24rem"};
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  filter: blur(64px);
+`;
+
+const CenterCard = styled(motion.div)<{ $dark: boolean }>`
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 400px;
+  background: ${({ $dark }) => ($dark ? "#0f172a" : "white")};
+  border-radius: 20px;
+  padding: 2.5rem 2rem;
+  box-shadow: ${({ $dark }) =>
+    $dark
+      ? "0 25px 50px -12px rgba(0, 0, 0, 0.5)"
+      : "0 25px 50px -12px rgba(0, 0, 0, 0.15)"};
+  text-align: center;
+`;
+
+const WelcomeTitle = styled(Typography.Title)`
+  && {
+    margin: 0 0 4px 0 !important;
+    font-weight: 700 !important;
+    font-size: 24px !important;
+  }
+`;
+
+const WelcomeSub = styled(Typography.Text)`
+  && {
+    font-size: 14px !important;
+    display: block !important;
+    margin-bottom: 24px !important;
+  }
+`;
+
+const ErrorWrapper = styled(motion.div)`
+  margin-bottom: 20px;
+  text-align: left;
+`;
+
+const FieldLabel = styled.span<{ $dark: boolean }>`
+  color: ${({ $dark }) => ($dark ? "#cbd5e1" : "#334155")};
+  font-weight: 600;
+  font-size: 14px;
+`;
+
+const StyledInput = styled(Input)<{ $dark: boolean }>`
+  && {
+    height: 48px;
+    border-radius: 12px;
+    font-size: 15px;
+    border-color: ${({ $dark }) => ($dark ? "#334155" : "#e2e8f0")};
+    background: ${({ $dark }) => ($dark ? "#1e293b" : "#f8fafc")};
+    color: ${({ $dark }) => ($dark ? "#e2e8f0" : "inherit")};
+
+    &:hover {
+      border-color: #3b82f6 !important;
+    }
+    &:focus {
+      border-color: #3b82f6 !important;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+    }
+  }
+`;
+
+const StyledPasswordInput = styled(Input.Password)<{ $dark: boolean }>`
+  && {
+    height: 48px;
+    border-radius: 12px;
+    font-size: 15px;
+    border-color: ${({ $dark }) => ($dark ? "#334155" : "#e2e8f0")};
+    background: ${({ $dark }) => ($dark ? "#1e293b" : "#f8fafc")};
+
+    &:hover {
+      border-color: #3b82f6 !important;
+    }
+    &:focus {
+      border-color: #3b82f6 !important;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+    }
+  }
+`;
+
+const SubmitButton = styled(Button)`
+  && {
+    height: 48px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    background: linear-gradient(135deg, ${GRADIENT.from}, ${GRADIENT.to});
+    border: none;
+    transition: all 0.2s;
+
+    &:hover {
+      opacity: 0.9 !important;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+    }
+  }
+`;
+
+const ButtonContent = styled.span`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+`;
+
+const IconStyle = { color: "#94a3b8" };
+
 export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [remember, setRemember] = useState(
-    () => localStorage.getItem("rememberedEmail") || "",
-  );
   const { login } = useAuth();
   const { dark } = useTheme();
   const navigate = useNavigate();
   const [form] = Form.useForm();
-
-  useEffect(() => {
-    const saved = localStorage.getItem("rememberedEmail");
-    if (saved) {
-      form.setFieldsValue({ email: saved });
-      setRemember(saved);
-    }
-  }, [form]);
 
   const handleSubmit = async (values: { email: string; password: string }) => {
     setError("");
     setLoading(true);
     try {
       await login(values.email, values.password);
-      if (remember) {
-        localStorage.setItem("rememberedEmail", values.email);
-      } else {
-        localStorage.removeItem("rememberedEmail");
-      }
       navigate("/");
     } catch (err: unknown) {
       const apiErr = err as ApiError;
@@ -51,53 +168,25 @@ export default function Login() {
     }
   };
 
-  const formContent = (
-    <Card
-      className="w-full border-0 sm:border"
-      styles={{
-        body: { padding: 0 },
-      }}
-      style={{
-        background: "transparent",
-        boxShadow: dark ? "none" : undefined,
-      }}
-    >
-      <div className="sm:px-8 sm:py-10">
-        {/* Desktop-only brand header inside card */}
-        <div className="hidden md:block mb-8">
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            <div className="size-12 rounded-xl flex items-center justify-center mb-4">
-              <Wallet className="size-6 text-white" />
-              DayBook
-            </div>
-            <Typography.Title
-              level={3}
-              style={{
-                margin: 0,
-                marginBottom: 4,
-                fontWeight: 700,
-                color: dark ? "#e2e8f0" : "#1e293b",
-              }}
-            >
-              Welcome back
-            </Typography.Title>
-            <Typography.Text
-              style={{ color: dark ? "#94a3b8" : "#64748b", fontSize: 15 }}
-            >
-              Sign in to your account
-            </Typography.Text>
-          </motion.div>
-        </div>
+  return (
+    <PageContainer>
+      <GlowBlob $top="10%" $left="10%" $size="32rem" />
+      <GlowBlob $bottom="10%" $right="10%" $size="28rem" />
+      <GlowBlob $top="50%" $right="40%" $size="20rem" />
+
+      <CenterCard
+        $dark={dark}
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <WelcomeTitle level={2}>Welcome to DayBook</WelcomeTitle>
+        <WelcomeSub>Track your income and expenses effortlessly.</WelcomeSub>
 
         {error && (
-          <motion.div
+          <ErrorWrapper
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            style={{ marginBottom: 20 }}
           >
             <Alert
               message={error}
@@ -106,7 +195,7 @@ export default function Login() {
               closable
               onClose={() => setError("")}
             />
-          </motion.div>
+          </ErrorWrapper>
         )}
 
         <Form
@@ -121,39 +210,19 @@ export default function Login() {
             transition={{ delay: 0.15, duration: 0.4 }}
           >
             <Form.Item
-              label={
-                <span
-                  style={{
-                    color: dark ? "#cbd5e1" : "#334155",
-                    fontWeight: 600,
-                    fontSize: 14,
-                  }}
-                >
-                  Email
-                </span>
-              }
+              label={<FieldLabel $dark={dark}>Email</FieldLabel>}
               name="email"
               rules={[
                 { required: true, message: "Please enter your email" },
                 { type: "email", message: "Enter a valid email" },
               ]}
             >
-              <Input
-                prefix={
-                  <Mail className="size-4" style={{ color: "#94a3b8" }} />
-                }
+              <StyledInput
+                $dark={dark}
+                prefix={<Mail className="size-4" style={IconStyle} />}
                 placeholder="you@example.com"
                 size="large"
                 autoFocus
-                style={{
-                  height: 48,
-                  borderRadius: 12,
-                  borderColor: dark ? "#334155" : "#e2e8f0",
-                  background: dark ? "#1e293b" : "#f8fafc",
-                  fontSize: 15,
-                  color: dark ? "#e2e8f0" : undefined,
-                }}
-                className="hover:!border-blue-500 focus:!border-blue-500 focus:!ring-2 focus:!ring-blue-500/20 transition-all"
               />
             </Form.Item>
           </motion.div>
@@ -164,41 +233,22 @@ export default function Login() {
             transition={{ delay: 0.25, duration: 0.4 }}
           >
             <Form.Item
-              label={
-                <span
-                  style={{
-                    color: dark ? "#cbd5e1" : "#334155",
-                    fontWeight: 600,
-                    fontSize: 14,
-                  }}
-                >
-                  Password
-                </span>
-              }
+              label={<FieldLabel $dark={dark}>Password</FieldLabel>}
               name="password"
               rules={[
                 { required: true, message: "Please enter your password" },
               ]}
             >
-              <Input.Password
-                prefix={
-                  <Lock className="size-4" style={{ color: "#94a3b8" }} />
-                }
+              <StyledPasswordInput
+                $dark={dark}
+                prefix={<Lock className="size-4" style={IconStyle} />}
                 placeholder="••••••••"
                 size="large"
-                style={{
-                  height: 48,
-                  borderRadius: 12,
-                  borderColor: dark ? "#334155" : "#e2e8f0",
-                  background: dark ? "#1e293b" : "#f8fafc",
-                  fontSize: 15,
-                }}
-                className="hover:!border-blue-500 focus:!border-blue-500 focus:!ring-2 focus:!ring-blue-500/20 transition-all"
                 iconRender={(visible) =>
                   visible ? (
-                    <EyeOff className="size-4" style={{ color: "#94a3b8" }} />
+                    <EyeOff className="size-4" style={IconStyle} />
                   ) : (
-                    <Eye className="size-4" style={{ color: "#94a3b8" }} />
+                    <Eye className="size-4" style={IconStyle} />
                   )
                 }
               />
@@ -210,61 +260,23 @@ export default function Login() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35, duration: 0.4 }}
           >
-            <Form.Item style={{ marginBottom: 12 }}>
-              <Button
+            <Form.Item style={{ marginBottom: 0 }}>
+              <SubmitButton
                 type="primary"
                 htmlType="submit"
                 loading={loading}
                 block
                 size="large"
-                style={{
-                  height: 48,
-                  borderRadius: 12,
-                  fontSize: 16,
-                  fontWeight: 600,
-                  background: `linear-gradient(135deg, ${GRADIENT.from}, ${GRADIENT.to})`,
-                  border: "none",
-                }}
-                className="hover:!opacity-90 hover:!shadow-lg transition-all cursor-pointer"
               >
-                <span
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                  }}
-                >
+                <ButtonContent>
                   {loading ? "Signing in..." : "Sign in"}
                   {!loading && <ArrowRight className="size-4" />}
-                </span>
-              </Button>
+                </ButtonContent>
+              </SubmitButton>
             </Form.Item>
           </motion.div>
         </Form>
-      </div>
-    </Card>
-  );
-
-  return (
-    <div
-      className="min-h-screen flex"
-      style={{ background: dark ? "#0f172a" : undefined }}
-    >
-      {/* Right side - Login form */}
-      <div
-        className="flex-1 flex items-center justify-center min-h-screen px-4 py-8"
-        style={{ background: dark ? "#0f172a" : "white" }}
-      >
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className="w-full max-w-[440px]"
-        >
-          {formContent}
-        </motion.div>
-      </div>
-    </div>
+      </CenterCard>
+    </PageContainer>
   );
 }
