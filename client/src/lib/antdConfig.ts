@@ -1,6 +1,7 @@
-import type { ThemeConfig } from 'antd';
+import { type ThemeConfig, theme } from 'antd';
 
-export const themeConfig: ThemeConfig = {
+export const getThemeConfig = (dark: boolean): ThemeConfig => ({
+  algorithm: dark ? theme.darkAlgorithm : theme.defaultAlgorithm,
   token: {
     fontFamily: '"Inter", ui-sans-serif, system-ui, sans-serif',
     borderRadius: 8,
@@ -10,4 +11,4 @@ export const themeConfig: ThemeConfig = {
       paddingLG: 24,
     },
   },
-};
+});

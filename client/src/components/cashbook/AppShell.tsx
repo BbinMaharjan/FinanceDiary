@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from "react-router-dom";
-import { Bell } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
+import { Sun, Moon } from "lucide-react";
 import { Sidebar } from "./Sidebar";
 import { BottomNav } from "./BottomNav";
 import {
@@ -11,7 +12,6 @@ import {
   Avatar,
   Grid,
   Flex,
-  Space,
   theme,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
@@ -38,6 +38,7 @@ export function AppShell() {
   const { user } = useAuth();
   const screens = useBreakpoint();
   const { token } = theme.useToken();
+  const { dark, toggleTheme } = useTheme();
 
   const initials =
     user?.name
@@ -101,10 +102,11 @@ export function AppShell() {
                 </Typography.Text>
               )}
             </Flex>
-            <Space size={8}>
+            <Flex align="center" gap={4}>
               <Button
                 type="text"
-                icon={<Bell style={{ width: 18, height: 18 }} />}
+                icon={dark ? <Sun style={{ width: 18, height: 18 }} /> : <Moon style={{ width: 18, height: 18 }} />}
+                onClick={toggleTheme}
               />
               <Avatar
                 size={36}
@@ -115,7 +117,7 @@ export function AppShell() {
               >
                 {initials}
               </Avatar>
-            </Space>
+            </Flex>
           </Flex>
         </Header>
         <Content
