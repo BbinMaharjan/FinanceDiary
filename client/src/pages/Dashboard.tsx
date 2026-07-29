@@ -97,7 +97,7 @@ export default function Dashboard() {
                   <YAxis stroke="#8c8c8c" fontSize={11} />
                   <Tooltip
                     contentStyle={{ borderRadius: 12, border: '1px solid #f0f0f0' }}
-                    labelFormatter={(v: string) => new Date(v).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                    labelFormatter={(v) => new Date(v as string).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                   />
                   <Legend />
                   <Bar dataKey="income" name="Income" fill="#22c55e" radius={[4, 4, 0, 0]} maxBarSize={24} />
