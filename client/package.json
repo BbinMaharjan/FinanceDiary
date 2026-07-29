@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@ant-design/icons": "^6.2.2",
+    "@tanstack/react-query": "^5.101.4",
     "antd": "^6.3.7",
     "axios": "^1.16.0",
     "clsx": "^2.1.1",

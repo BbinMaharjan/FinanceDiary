@@ -1,35 +1,34 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Moon, Sun, Download, LogOut, User, Save } from 'lucide-react';
+import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import api from '../services/api';
 import { Button, Card, Input, Switch, Divider, Avatar, Alert, Typography } from 'antd';
-import type { ApiError } from '../types';
 
 export default function Settings() {
   const { user, logout } = useAuth();
   const { dark, toggleTheme } = useTheme();
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
-  const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
 
   const initials = user?.name?.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
 
+  const { mutateAsync: saveProfile, isPending: saving } = useMutation({
+    mutationFn: (data: { name: string; email: string }) => api.put('/auth/profile', data),
+    onSuccess: () => setMessage('Profile updated'),
+    onError: (err: unknown) => {
+      const apiErr = err as { response?: { data?: { message?: string } } };
+      setMessage(apiErr.response?.data?.message || 'Update failed');
+    },
+  });
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
     setMessage('');
-    try {
-      await api.put('/auth/profile', { name, email });
-      setMessage('Profile updated');
-    } catch (err: unknown) {
-      const apiErr = err as ApiError;
-      setMessage(apiErr.response?.data?.message || 'Update failed');
-    } finally {
-      setSaving(false);
-    }
+    await saveProfile({ name, email });
   };
 
   return (

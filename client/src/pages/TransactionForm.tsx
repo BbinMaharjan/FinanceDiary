@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useTransactions } from '../hooks/useTransactions';
 import { useCategories } from '../hooks/useCategories';
 import api from '../services/api';
@@ -34,24 +35,32 @@ export default function TransactionForm() {
     paymentType: 'Cash',
     notes: '',
   });
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const { isLoading: loading, error: fetchError } = useQuery({
+    queryKey: ['transaction', id],
+    queryFn: async () => {
+      if (!isEdit || !id) return null;
+      const { data } = await api.get<Transaction>(`/transactions/${id}`);
+      setForm({
+        date: new Date(data.date).toISOString().split('T')[0],
+        title: data.title,
+        amount: String(data.amount),
+        type: data.type,
+        category: typeof data.category === 'object' && '_id' in data.category ? data.category._id : '',
+        paymentType: data.paymentType,
+        notes: data.notes || '',
+      });
+      return data;
+    },
+    enabled: isEdit,
+    retry: false,
+  });
 
   useEffect(() => {
-    if (isEdit && id) {
-      api.get<Transaction>(`/transactions/${id}`).then(({ data }) => {
-        setForm({
-          date: new Date(data.date).toISOString().split('T')[0],
-          title: data.title,
-          amount: String(data.amount),
-          type: data.type,
-          category: typeof data.category === 'object' && '_id' in data.category ? data.category._id : '',
-          paymentType: data.paymentType,
-          notes: data.notes || '',
-        });
-      }).catch(() => navigate('/transactions'));
-    }
-  }, [id]);
+    if (fetchError) navigate('/transactions');
+  }, [fetchError, navigate]);
 
   const categories = form.type === 'income' ? incomeCategories : expenseCategories;
 
@@ -64,20 +73,29 @@ export default function TransactionForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
+    setSaving(true);
     try {
       const payload = { ...form, amount: Number(form.amount) };
       if (isEdit) {
-        await updateTransaction(id!, payload);
+        await updateTransaction({ id: id!, ...payload });
+        navigate('/transactions');
       } else {
         await createTransaction(payload);
+        setForm({
+          date: new Date().toISOString().split('T')[0],
+          title: '',
+          amount: '',
+          type: form.type,
+          category: '',
+          paymentType: 'Cash',
+          notes: '',
+        });
       }
-      navigate('/transactions');
     } catch (err: unknown) {
       const apiErr = err as ApiError;
       setError(apiErr.response?.data?.message || 'Failed to save transaction');
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -153,8 +171,8 @@ export default function TransactionForm() {
             />
           </div>
 
-          <Button type="primary" htmlType="submit" loading={loading} block>
-            {loading ? 'Saving...' : isEdit ? 'Update Transaction' : 'Add Transaction'}
+          <Button type="primary" htmlType="submit" loading={saving} block>
+            {saving ? 'Saving...' : isEdit ? 'Update Transaction' : 'Add Transaction'}
           </Button>
         </form>
       </Card>

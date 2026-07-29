@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Download } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
 import { Button, Card, Select, Skeleton, Typography, Flex } from 'antd';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -10,23 +11,24 @@ const COLORS = ['#1677ff', '#f97316', '#22c55e', '#f59e0b', '#8b5cf6', '#ec4899'
 
 export default function Reports() {
   const [year, setYear] = useState(new Date().getFullYear());
-  const [yearlyData, setYearlyData] = useState<YearlyReportData | null>(null);
-  const [categoryData, setCategoryData] = useState<CategoryReportItem[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    setLoading(true);
-    Promise.all([
-      api.get<YearlyReportData>('/reports/yearly', { params: { year } }),
-      api.get<CategoryReportItem[]>('/reports/categories', { params: { startDate: `${year}-01-01`, endDate: `${year}-12-31` } }),
-    ])
-      .then(([yearly, cat]) => {
-        setYearlyData(yearly.data);
-        setCategoryData(cat.data);
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [year]);
+  const { data: yearlyData, isLoading: loadingYearly } = useQuery({
+    queryKey: ['yearly-report', year],
+    queryFn: async () => {
+      const { data } = await api.get<YearlyReportData>('/reports/yearly', { params: { year } });
+      return data;
+    },
+  });
+
+  const { data: categoryData = [], isLoading: loadingCategories } = useQuery({
+    queryKey: ['category-report', year],
+    queryFn: async () => {
+      const { data } = await api.get<CategoryReportItem[]>('/reports/categories', { params: { startDate: `${year}-01-01`, endDate: `${year}-12-31` } });
+      return data;
+    },
+  });
+
+  const loading = loadingYearly || loadingCategories;
 
   const barData = yearlyData?.monthlyData?.map((m: MonthlySummary) => ({
     name: m.month?.slice(0, 3),

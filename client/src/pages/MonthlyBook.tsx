@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Download } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
 import { Button, Card, Select, Skeleton, Typography, Flex } from 'antd';
 import type { MonthlySummary, Transaction } from '../types';
@@ -18,30 +19,28 @@ function getMonthDateRange(month: string, year: number) {
 }
 
 export default function MonthlyBook() {
-  const [summaries, setSummaries] = useState<MonthlySummary[]>([]);
   const [selectedMonth, setSelectedMonth] = useState(MONTHS[new Date().getMonth()]);
   const [year, setYear] = useState(new Date().getFullYear());
-  const [loading, setLoading] = useState(true);
-  const [monthTransactions, setMonthTransactions] = useState<Transaction[]>([]);
-  const [txLoading, setTxLoading] = useState(false);
 
-  useEffect(() => {
-    setLoading(true);
-    api.get<MonthlySummary[]>('/reports/monthly', { params: { year } })
-      .then(({ data }) => setSummaries(data))
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [year]);
+  const { data: summaries = [], isLoading } = useQuery({
+    queryKey: ['monthly-summaries', year],
+    queryFn: async () => {
+      const { data } = await api.get<MonthlySummary[]>('/reports/monthly', { params: { year } });
+      return data;
+    },
+  });
 
-  useEffect(() => {
-    if (!selectedMonth) return;
-    setTxLoading(true);
-    const { startDate, endDate } = getMonthDateRange(selectedMonth, year);
-    api.get('/transactions', { params: { startDate, endDate, limit: 50 } })
-      .then(({ data }) => setMonthTransactions(data.transactions || []))
-      .catch(console.error)
-      .finally(() => setTxLoading(false));
-  }, [selectedMonth, year]);
+  const { startDate, endDate } = selectedMonth ? getMonthDateRange(selectedMonth, year) : { startDate: '', endDate: '' };
+
+  const { data: monthTransactions = [], isLoading: txLoading } = useQuery({
+    queryKey: ['transactions', 'month', startDate, endDate],
+    queryFn: async () => {
+      if (!startDate || !endDate) return [];
+      const { data } = await api.get('/transactions', { params: { startDate, endDate, limit: 50 } });
+      return data.transactions || [];
+    },
+    enabled: !!startDate && !!endDate,
+  });
 
   const currentSummary = summaries.find((s: MonthlySummary) => s.month === selectedMonth);
 
@@ -89,7 +88,7 @@ export default function MonthlyBook() {
         ))}
       </Flex>
 
-      {loading ? (
+      {isLoading ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Skeleton.Button active style={{ height: 128, borderRadius: 12, width: '100%' }} />
           <Skeleton.Button active style={{ height: 192, borderRadius: 12, width: '100%' }} />

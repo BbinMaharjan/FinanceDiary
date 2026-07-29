@@ -1,32 +1,26 @@
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
 import { Card, Col, Row, Skeleton, Typography, Flex } from 'antd';
+import { useQuery } from '@tanstack/react-query';
 import { StatCard } from '../components/cashbook/StatCard';
 import { TransactionItem } from '../components/cashbook/TransactionItem';
 import api from '../services/api';
 import type { DashboardData, CategorySpending, Transaction } from '../types';
 
 export default function Dashboard() {
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['dashboard'],
+    queryFn: async () => {
+      const { data } = await api.get<DashboardData>('/reports/dashboard');
+      return data;
+    },
+  });
 
-  useEffect(() => {
-    api.get('/reports/dashboard')
-      .then((res) => setData(res.data))
-      .catch((err) => {
-        console.error('Dashboard API error:', err);
-        setError(err.message || 'Failed to load dashboard');
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         <Row gutter={[16, 16]}>
@@ -55,7 +49,7 @@ export default function Dashboard() {
     return (
       <div style={{ textAlign: 'center', padding: '48px 0' }}>
         <Typography.Text type="danger" style={{ fontSize: 16, display: 'block', marginBottom: 8 }}>
-          {error}
+          {error instanceof Error ? error.message : 'Failed to load dashboard'}
         </Typography.Text>
         <Typography.Text type="secondary">Check that the backend server is running on port 5000</Typography.Text>
       </div>

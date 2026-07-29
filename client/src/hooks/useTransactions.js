@@ -1,42 +1,41 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
 
 export function useTransactions(params = {}) {
-  const [data, setData] = useState({ transactions: [], total: 0, page: 1, pages: 1 });
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchTransactions = useCallback(async () => {
-    setLoading(true);
-    try {
+  const { data, isLoading } = useQuery({
+    queryKey: ['transactions', params],
+    queryFn: async () => {
       const { data: res } = await api.get('/transactions', { params });
-      setData(res);
-    } catch (err) {
-      console.error('Failed to fetch transactions', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [JSON.stringify(params)]);
+      return res;
+    },
+  });
 
-  useEffect(() => {
-    fetchTransactions();
-  }, [fetchTransactions]);
+  const createTransaction = useMutation({
+    mutationFn: (txData) => api.post('/transactions', txData).then((r) => r.data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['transactions'] }),
+  });
 
-  const createTransaction = async (txData) => {
-    const { data: tx } = await api.post('/transactions', txData);
-    await fetchTransactions();
-    return tx;
+  const updateTransaction = useMutation({
+    mutationFn: ({ id, ...txData }) => api.put(`/transactions/${id}`, txData).then((r) => r.data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['transactions'] }),
+  });
+
+  const deleteTransaction = useMutation({
+    mutationFn: (id) => api.delete(`/transactions/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['transactions'] }),
+  });
+
+  return {
+    transactions: data?.transactions ?? [],
+    total: data?.total ?? 0,
+    page: data?.page ?? 1,
+    pages: data?.pages ?? 1,
+    loading: isLoading,
+    refetch: () => queryClient.invalidateQueries({ queryKey: ['transactions'] }),
+    createTransaction: createTransaction.mutateAsync,
+    updateTransaction: updateTransaction.mutateAsync,
+    deleteTransaction: deleteTransaction.mutateAsync,
   };
-
-  const updateTransaction = async (id, txData) => {
-    const { data: tx } = await api.put(`/transactions/${id}`, txData);
-    await fetchTransactions();
-    return tx;
-  };
-
-  const deleteTransaction = async (id) => {
-    await api.delete(`/transactions/${id}`);
-    await fetchTransactions();
-  };
-
-  return { ...data, loading, refetch: fetchTransactions, createTransaction, updateTransaction, deleteTransaction };
 }

@@ -1,43 +1,39 @@
-import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
 
 export function useCategories(type) {
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchCategories = async () => {
-    setLoading(true);
-    try {
+  const { data: categories = [], isLoading } = useQuery({
+    queryKey: ['categories', type],
+    queryFn: async () => {
       const params = type ? { type } : {};
       const { data } = await api.get('/categories', { params });
-      setCategories(data);
-    } catch (err) {
-      console.error('Failed to fetch categories', err);
-    } finally {
-      setLoading(false);
-    }
+      return data;
+    },
+  });
+
+  const createCategory = useMutation({
+    mutationFn: (catData) => api.post('/categories', catData).then((r) => r.data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['categories'] }),
+  });
+
+  const updateCategory = useMutation({
+    mutationFn: ({ id, ...catData }) => api.put(`/categories/${id}`, catData).then((r) => r.data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['categories'] }),
+  });
+
+  const deleteCategory = useMutation({
+    mutationFn: (id) => api.delete(`/categories/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['categories'] }),
+  });
+
+  return {
+    categories,
+    loading: isLoading,
+    refetch: () => queryClient.invalidateQueries({ queryKey: ['categories'] }),
+    createCategory: createCategory.mutateAsync,
+    updateCategory: updateCategory.mutateAsync,
+    deleteCategory: deleteCategory.mutateAsync,
   };
-
-  useEffect(() => {
-    fetchCategories();
-  }, [type]);
-
-  const createCategory = async (catData) => {
-    const { data } = await api.post('/categories', catData);
-    await fetchCategories();
-    return data;
-  };
-
-  const updateCategory = async (id, catData) => {
-    const { data } = await api.put(`/categories/${id}`, catData);
-    await fetchCategories();
-    return data;
-  };
-
-  const deleteCategory = async (id) => {
-    await api.delete(`/categories/${id}`);
-    await fetchCategories();
-  };
-
-  return { categories, loading, refetch: fetchCategories, createCategory, updateCategory, deleteCategory };
 }

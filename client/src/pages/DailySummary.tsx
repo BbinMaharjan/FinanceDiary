@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
 import { Button, Card, DatePicker, Flex, Skeleton, Typography } from 'antd';
 import type { DailySummary as DailySummaryType, Transaction } from '../types';
@@ -8,17 +9,15 @@ import dayjs from 'dayjs';
 
 export default function DailySummary() {
   const [selectedDate, setSelectedDate] = useState(dayjs());
-  const [data, setData] = useState<DailySummaryType | null>(null);
-  const [loading, setLoading] = useState(true);
+  const dateStr = selectedDate.format('YYYY-MM-DD');
 
-  useEffect(() => {
-    setLoading(true);
-    const dateStr = selectedDate.format('YYYY-MM-DD');
-    api.get<DailySummaryType>('/reports/daily', { params: { date: dateStr } })
-      .then(({ data }) => setData(data))
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [selectedDate]);
+  const { data, isLoading } = useQuery({
+    queryKey: ['daily-summary', dateStr],
+    queryFn: async () => {
+      const { data } = await api.get<DailySummaryType>('/reports/daily', { params: { date: dateStr } });
+      return data;
+    },
+  });
 
   const goToPrevDay = () => setSelectedDate((d) => d.subtract(1, 'day'));
   const goToNextDay = () => setSelectedDate((d) => d.add(1, 'day'));
@@ -47,7 +46,7 @@ export default function DailySummary() {
         <Button type="text" icon={<ChevronRight style={{ width: 18, height: 18 }} />} onClick={goToNextDay} />
       </Flex>
 
-      {loading ? (
+      {isLoading ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Skeleton.Button active style={{ height: 128, borderRadius: 12, width: '100%' }} />
           <Skeleton.Button active style={{ height: 192, borderRadius: 12, width: '100%' }} />
