@@ -1,108 +1,232 @@
-import { useState, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { Moon, Sun, Download, LogOut, User, Save } from 'lucide-react';
-import { useMutation } from '@tanstack/react-query';
-import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
-import api from '../services/api';
-import { Button, Card, Input, Switch, Divider, Avatar, Alert, Typography } from 'antd';
+import { useState, useCallback } from "react";
+import { motion } from "framer-motion";
+import { Moon, Sun, Download, LogOut, User, Save } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
+import api from "../services/api";
+import {
+  Button,
+  Card,
+  Input,
+  Switch,
+  Divider,
+  Avatar,
+  Alert,
+  Typography,
+} from "antd";
 
 export default function Settings() {
   const { user, logout } = useAuth();
   const { dark, toggleTheme } = useTheme();
-  const [name, setName] = useState(user?.name || '');
-  const [email, setEmail] = useState(user?.email || '');
-  const [message, setMessage] = useState('');
+  const [name, setName] = useState(user?.name || "");
+  const [email, setEmail] = useState(user?.email || "");
+  const [message, setMessage] = useState("");
 
-  const initials = user?.name?.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
+  const initials =
+    user?.name
+      ?.split(" ")
+      .map((n: string) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2) || "U";
 
-  const handleExport = useCallback(async (format: 'excel' | 'pdf') => {
+  const handleExport = useCallback(async (format: "excel" | "pdf") => {
     try {
-      const { data } = await api.get(`/export/${format}`, { responseType: 'blob' });
+      const { data } = await api.get(`/export/${format}`, {
+        responseType: "blob",
+      });
       const url = URL.createObjectURL(data as Blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = `transactions.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+      a.download = `transactions.${format === "excel" ? "xlsx" : "pdf"}`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Export failed', err);
+      console.error("Export failed", err);
     }
   }, []);
 
   const { mutateAsync: saveProfile, isPending: saving } = useMutation({
-    mutationFn: (data: { name: string; email: string }) => api.put('/auth/profile', data),
-    onSuccess: () => setMessage('Profile updated'),
+    mutationFn: (data: { name: string; email: string }) =>
+      api.put("/auth/profile", data),
+    onSuccess: () => setMessage("Profile updated"),
     onError: (err: unknown) => {
       const apiErr = err as { response?: { data?: { message?: string } } };
-      setMessage(apiErr.response?.data?.message || 'Update failed');
+      setMessage(apiErr.response?.data?.message || "Update failed");
     },
   });
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setMessage('');
+    setMessage("");
     await saveProfile({ name, email });
   };
 
   return (
-    <div style={{ maxWidth: 640, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <Typography.Title level={4} style={{ margin: 0 }}>Settings</Typography.Title>
+    <div
+      style={{
+        maxWidth: 640,
+        margin: "0 auto",
+        display: "flex",
+        flexDirection: "column",
+        gap: 24,
+      }}
+    >
+      <Typography.Title level={4} style={{ margin: 0 }}>
+        Settings
+      </Typography.Title>
 
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
         <Card style={{ borderRadius: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
-            <Avatar size={56} style={{ background: '#1677ff', verticalAlign: 'middle', fontSize: 20, fontWeight: 600 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 16,
+              marginBottom: 16,
+            }}
+          >
+            <Avatar
+              size={56}
+              style={{
+                background: "#1677ff",
+                verticalAlign: "middle",
+                fontSize: 20,
+                fontWeight: 600,
+              }}
+            >
               {initials}
             </Avatar>
             <div>
-              <Typography.Text style={{ fontWeight: 500, display: 'block' }}>{user?.name}</Typography.Text>
-              <Typography.Text type="secondary" style={{ fontSize: 14 }}>{user?.email}</Typography.Text>
+              <Typography.Text style={{ fontWeight: 500, display: "block" }}>
+                {user?.name}
+              </Typography.Text>
+              <Typography.Text type="secondary" style={{ fontSize: 14 }}>
+                {user?.email}
+              </Typography.Text>
             </div>
           </div>
 
           <Divider />
 
           <form onSubmit={handleSave}>
-            <h4 style={{ fontWeight: 500, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+            <h4
+              style={{
+                fontWeight: 500,
+                fontSize: 14,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: 16,
+              }}
+            >
               <User style={{ width: 16, height: 16 }} /> Profile
             </h4>
 
             {message && (
-              <Alert message={message} type={message === 'Profile updated' ? 'success' : 'error'} showIcon style={{ marginBottom: 16 }} />
+              <Alert
+                message={message}
+                type={message === "Profile updated" ? "success" : "error"}
+                showIcon
+                style={{ marginBottom: 16 }}
+              />
             )}
 
             <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Name</label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} />
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: 4,
+                  fontSize: 14,
+                  fontWeight: 500,
+                }}
+              >
+                Name
+              </label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                disabled={true}
+              />
             </div>
             <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Email</label>
-              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: 4,
+                  fontSize: 14,
+                  fontWeight: 500,
+                }}
+              >
+                Email
+              </label>
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={true}
+              />
             </div>
-            <Button type="primary" htmlType="submit" loading={saving} icon={<Save style={{ width: 16, height: 16 }} />}>
-              {saving ? 'Saving...' : 'Save Changes'}
-            </Button>
+            {/* <Button
+              type="primary"
+              htmlType="submit"
+              loading={saving}
+              icon={<Save style={{ width: 16, height: 16 }} />}
+            >
+              {saving ? "Saving..." : "Save Changes"}
+            </Button> */}
           </form>
         </Card>
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+      >
         <Card style={{ borderRadius: 12 }}>
-          <h4 style={{ fontWeight: 500, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-            {dark ? <Moon style={{ width: 16, height: 16 }} /> : <Sun style={{ width: 16, height: 16 }} />} Appearance
+          <h4
+            style={{
+              fontWeight: 500,
+              fontSize: 14,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              marginBottom: 16,
+            }}
+          >
+            {dark ? (
+              <Moon style={{ width: 16, height: 16 }} />
+            ) : (
+              <Sun style={{ width: 16, height: 16 }} />
+            )}{" "}
+            Appearance
           </h4>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
             <div>
-              <Typography.Text style={{ fontWeight: 500, display: 'block' }}>Dark Mode</Typography.Text>
-              <Typography.Text type="secondary" style={{ fontSize: 14 }}>Switch between light and dark theme</Typography.Text>
+              <Typography.Text style={{ fontWeight: 500, display: "block" }}>
+                Dark Mode
+              </Typography.Text>
+              <Typography.Text type="secondary" style={{ fontSize: 14 }}>
+                Switch between light and dark theme
+              </Typography.Text>
             </div>
             <Switch checked={dark} onChange={toggleTheme} />
           </div>
         </Card>
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+      {/* <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
         <Card style={{ borderRadius: 12 }}>
           <h4 style={{ fontWeight: 500, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
             <Download style={{ width: 16, height: 16 }} /> Export Data
@@ -116,11 +240,20 @@ export default function Settings() {
             </Button>
           </div>
         </Card>
-      </motion.div>
+      </motion.div> */}
 
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+      >
         <Card style={{ borderRadius: 12 }}>
-          <Button danger block icon={<LogOut style={{ width: 16, height: 16 }} />} onClick={logout}>
+          <Button
+            danger
+            block
+            icon={<LogOut style={{ width: 16, height: 16 }} />}
+            onClick={logout}
+          >
             Sign out
           </Button>
         </Card>
