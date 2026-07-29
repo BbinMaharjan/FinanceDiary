@@ -137,18 +137,40 @@ async function updateMonthlySummary(userId, date) {
   const totalIncome = result.find(r => r._id === 'income')?.total || 0;
   const totalExpense = result.find(r => r._id === 'expense')?.total || 0;
 
-  await MonthlySummary.findOneAndUpdate(
-    { user: userId, month, year },
-    {
-      user: userId,
-      month,
-      year,
-      totalIncome,
-      totalExpense,
-      balance: totalIncome - totalExpense,
-    },
-    { upsert: true, new: true }
-  );
+  try {
+    await MonthlySummary.updateOne(
+      { user: userId, month, year },
+      {
+        $set: {
+          user: userId,
+          month,
+          year,
+          totalIncome,
+          totalExpense,
+          balance: totalIncome - totalExpense,
+        },
+      },
+      { upsert: true }
+    );
+  } catch (err) {
+    if (err.code === 11000) {
+      await MonthlySummary.updateOne(
+        { user: userId, month, year },
+        {
+          $set: {
+            user: userId,
+            month,
+            year,
+            totalIncome,
+            totalExpense,
+            balance: totalIncome - totalExpense,
+          },
+        }
+      );
+    } else {
+      throw err;
+    }
+  }
 }
 
 module.exports = { getTransactions, getTransaction, createTransaction, updateTransaction, deleteTransaction };
