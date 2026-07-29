@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Moon, Sun, Download, LogOut, User, Save } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
@@ -15,6 +15,20 @@ export default function Settings() {
   const [message, setMessage] = useState('');
 
   const initials = user?.name?.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
+
+  const handleExport = useCallback(async (format: 'excel' | 'pdf') => {
+    try {
+      const { data } = await api.get(`/export/${format}`, { responseType: 'blob' });
+      const url = URL.createObjectURL(data as Blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `transactions.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Export failed', err);
+    }
+  }, []);
 
   const { mutateAsync: saveProfile, isPending: saving } = useMutation({
     mutationFn: (data: { name: string; email: string }) => api.put('/auth/profile', data),
@@ -94,10 +108,10 @@ export default function Settings() {
             <Download style={{ width: 16, height: 16 }} /> Export Data
           </h4>
           <div style={{ display: 'flex', gap: 8 }}>
-            <Button icon={<Download style={{ width: 16, height: 16 }} />} onClick={() => window.open('/api/export/excel', '_blank')} style={{ flex: 1 }}>
+            <Button icon={<Download style={{ width: 16, height: 16 }} />} onClick={() => handleExport('excel')} style={{ flex: 1 }}>
               Excel
             </Button>
-            <Button icon={<Download style={{ width: 16, height: 16 }} />} onClick={() => window.open('/api/export/pdf', '_blank')} style={{ flex: 1 }}>
+            <Button icon={<Download style={{ width: 16, height: 16 }} />} onClick={() => handleExport('pdf')} style={{ flex: 1 }}>
               PDF
             </Button>
           </div>
