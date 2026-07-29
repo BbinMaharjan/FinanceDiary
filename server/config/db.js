@@ -2,8 +2,13 @@ const mongoose = require('mongoose');
 const dns = require('dns');
 dns.setServers(['8.8.8.8', '8.8.4.4']);
 
+mongoose.set('bufferCommands', false);
+
 const connectDB = async () => {
   try {
+    if (!process.env.MONGODB_URI) {
+      throw new Error('MONGODB_URI environment variable is not set');
+    }
     const conn = await mongoose.connect(process.env.MONGODB_URI, {
       serverApi: {
         version: '1',

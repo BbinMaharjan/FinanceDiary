@@ -5,14 +5,13 @@ let dbPromise = null;
 
 module.exports = async (req, res) => {
   if (!dbPromise) {
-    dbPromise = connectDB().catch((err) => {
-      console.error('DB connection failed:', err);
-      dbPromise = null;
-    });
+    dbPromise = connectDB();
   }
   try {
     await dbPromise;
-  } catch {
+  } catch (err) {
+    console.error('DB connection failed:', err);
+    dbPromise = null;
     res.status(500).json({ message: 'Database connection failed' });
     return;
   }
