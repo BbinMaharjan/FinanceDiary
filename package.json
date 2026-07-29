@@ -9,6 +9,16 @@
     "build": "cd client && npm run build",
     "start": "cd server && npm start"
   },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "jspdf": "^4.2.1",
+    "mongoose": "^9.6.2",
+    "xlsx": "^0.18.5"
+  },
   "devDependencies": {
     "concurrently": "^9.1.0"
   }
