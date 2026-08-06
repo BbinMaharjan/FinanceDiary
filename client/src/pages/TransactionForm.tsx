@@ -3,6 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTransactions } from '../hooks/useTransactions';
 import { useCategories } from '../hooks/useCategories';
+import { useAccounts } from '../hooks/useAccounts';
 import api from '../services/api';
 import { Button, Card, Input, Select, Alert } from 'antd';
 import { ArrowLeft } from 'lucide-react';
@@ -14,6 +15,7 @@ interface TransactionFormState {
   amount: string;
   type: TransactionType;
   category: string;
+  account?: string;
   paymentType: PaymentType;
   notes: string;
 }
@@ -25,6 +27,7 @@ export default function TransactionForm() {
   const { createTransaction, updateTransaction } = useTransactions();
   const { categories: incomeCategories } = useCategories('income');
   const { categories: expenseCategories } = useCategories('expense');
+  const { accounts } = useAccounts();
 
   const [form, setForm] = useState<TransactionFormState>({
     date: new Date().toISOString().split('T')[0],
@@ -49,6 +52,7 @@ export default function TransactionForm() {
         amount: String(data.amount),
         type: data.type,
         category: typeof data.category === 'object' && '_id' in data.category ? data.category._id : '',
+        account: typeof data.account === 'object' && data.account && '_id' in data.account ? data.account._id : undefined,
         paymentType: data.paymentType,
         notes: data.notes || '',
       });
@@ -70,12 +74,20 @@ export default function TransactionForm() {
     }
   }, [form.type, categories]);
 
+  const handlePaymentTypeChange = (paymentType: PaymentType) => {
+    setForm((prev) => ({
+      ...prev,
+      paymentType,
+      account: paymentType === 'Cash' ? undefined : prev.account,
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSaving(true);
     try {
-      const payload = { ...form, amount: Number(form.amount) };
+      const payload = { ...form, amount: Number(form.amount), account: form.account || undefined };
       if (isEdit) {
         await updateTransaction({ id: id!, ...payload });
         navigate('/transactions');
@@ -87,6 +99,7 @@ export default function TransactionForm() {
           amount: '',
           type: form.type,
           category: '',
+          account: undefined,
           paymentType: 'Cash',
           notes: '',
         });
@@ -153,9 +166,31 @@ export default function TransactionForm() {
 
           <div style={{ marginBottom: 16 }}>
             <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>Payment Type</label>
-            <Select value={form.paymentType} onChange={(v) => setForm({ ...form, paymentType: v as PaymentType })} style={{ width: '100%' }}>
+            <Select value={form.paymentType} onChange={(v) => handlePaymentTypeChange(v as PaymentType)} style={{ width: '100%' }}>
               {(['Cash', 'Bank Transfer', 'Card', 'Other'] as PaymentType[]).map((pt) => (
                 <Select.Option key={pt} value={pt}>{pt}</Select.Option>
+              ))}
+            </Select>
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>
+              Bank Account {form.paymentType === 'Cash' ? '(optional)' : ''}
+            </label>
+            <Select
+              value={form.account || undefined}
+              onChange={(v) => setForm({ ...form, account: v })}
+              placeholder={form.paymentType === 'Cash' ? 'Not needed for cash payments' : 'Select an account (optional)'}
+              style={{ width: '100%' }}
+              allowClear
+              notFoundContent={accounts.length === 0 ? (
+                <Link to="/accounts" style={{ padding: 8, display: 'block', color: '#1677ff' }}>+ Add a bank account</Link>
+              ) : 'No accounts'}
+            >
+              {accounts.map((acc: { _id: string; name: string; bankName?: string }) => (
+                <Select.Option key={acc._id} value={acc._id}>
+                  {acc.name}{acc.bankName ? ` (${acc.bankName})` : ''}
+                </Select.Option>
               ))}
             </Select>
           </div>

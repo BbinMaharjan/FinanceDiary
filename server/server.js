@@ -8,6 +8,7 @@ const authRoutes = require('./routes/auth');
 const transactionRoutes = require('./routes/transactions');
 const reportRoutes = require('./routes/reports');
 const categoryRoutes = require('./routes/categories');
+const accountRoutes = require('./routes/accounts');
 const exportRoutes = require('./routes/export');
 
 const app = express();
@@ -24,6 +25,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/accounts', accountRoutes);
 app.use('/api/export', exportRoutes);
 
 app.use(errorHandler);

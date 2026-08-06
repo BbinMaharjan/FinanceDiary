@@ -29,6 +29,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/reports": "Reports",
   "/settings": "Settings",
   "/categories": "Categories",
+  "/accounts": "Bank Accounts",
 };
 
 const SIDEBAR_WIDTH = 256;

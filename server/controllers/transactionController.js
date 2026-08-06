@@ -4,7 +4,7 @@ const { toEnglishMonth, ENGLISH_MONTHS } = require('../utils/nepaliDate');
 
 const getTransactions = async (req, res, next) => {
   try {
-    const { page = 1, limit = 20, startDate, endDate, type, category, paymentType, search } = req.query;
+    const { page = 1, limit = 20, startDate, endDate, type, category, paymentType, account, search } = req.query;
     const filter = { user: req.user._id };
 
     if (startDate || endDate) {
@@ -15,11 +15,13 @@ const getTransactions = async (req, res, next) => {
     if (type) filter.type = type;
     if (category) filter.category = category;
     if (paymentType) filter.paymentType = paymentType;
+    if (account) filter.account = account;
     if (search) filter.title = { $regex: search, $options: 'i' };
 
     const total = await Transaction.countDocuments(filter);
     const transactions = await Transaction.find(filter)
       .populate('category', 'name icon color')
+      .populate('account', 'name bankName')
       .sort({ date: -1, createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(Number(limit));
@@ -38,7 +40,8 @@ const getTransactions = async (req, res, next) => {
 const getTransaction = async (req, res, next) => {
   try {
     const transaction = await Transaction.findOne({ _id: req.params.id, user: req.user._id })
-      .populate('category', 'name icon color');
+      .populate('category', 'name icon color')
+      .populate('account', 'name bankName');
     if (!transaction) {
       return res.status(404).json({ message: 'Transaction not found' });
     }
@@ -50,7 +53,7 @@ const getTransaction = async (req, res, next) => {
 
 const createTransaction = async (req, res, next) => {
   try {
-    const { date, title, amount, type, category, paymentType, notes } = req.body;
+    const { date, title, amount, type, category, paymentType, account, notes } = req.body;
 
     const transaction = await Transaction.create({
       user: req.user._id,
@@ -60,12 +63,14 @@ const createTransaction = async (req, res, next) => {
       type,
       category,
       paymentType,
+      account: account || null,
       notes,
     });
 
     await updateMonthlySummary(req.user._id, new Date(date));
 
     const populated = await transaction.populate('category', 'name icon color');
+    await populated.populate('account', 'name bankName');
     res.status(201).json(populated);
   } catch (error) {
     next(error);
@@ -83,12 +88,16 @@ const updateTransaction = async (req, res, next) => {
 
     Object.assign(transaction, req.body);
     if (req.body.date) transaction.date = new Date(req.body.date);
+    if (req.body.account === undefined || req.body.account === null || req.body.account === '') {
+      transaction.account = null;
+    }
     const updated = await transaction.save();
 
     await updateMonthlySummary(req.user._id, oldDate);
     await updateMonthlySummary(req.user._id, new Date(transaction.date));
 
     const populated = await updated.populate('category', 'name icon color');
+    await populated.populate('account', 'name bankName');
     res.json(populated);
   } catch (error) {
     next(error);

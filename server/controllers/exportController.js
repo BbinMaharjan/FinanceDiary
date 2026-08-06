@@ -14,6 +14,7 @@ const exportExcel = async (req, res, next) => {
 
     const transactions = await Transaction.find(filter)
       .populate('category', 'name')
+      .populate('account', 'name')
       .sort({ date: -1 });
 
     const data = transactions.map(t => ({
@@ -23,6 +24,7 @@ const exportExcel = async (req, res, next) => {
       Type: t.type,
       Category: t.category?.name || 'N/A',
       'Payment Type': t.paymentType,
+      Account: t.account?.name || 'N/A',
       Notes: t.notes || '',
     }));
 

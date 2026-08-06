@@ -1,5 +1,6 @@
 const Transaction = require('../models/Transaction');
 const MonthlySummary = require('../models/MonthlySummary');
+const Account = require('../models/Account');
 
 const getDashboard = async (req, res, next) => {
   try {
@@ -20,7 +21,7 @@ const getDashboard = async (req, res, next) => {
     fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 13);
     fourteenDaysAgo.setHours(0, 0, 0, 0);
 
-    const [overallStats, monthlyStats, yearlyStats, recentTransactions, dailyCashFlow, categoryBreakdown, prevMonthStats] = await Promise.all([
+    const [overallStats, monthlyStats, yearlyStats, recentTransactions, dailyCashFlow, categoryBreakdown, prevMonthStats, accountStats, accountList] = await Promise.all([
       Transaction.aggregate([
         { $match: { user: req.user._id } },
         { $group: { _id: '$type', total: { $sum: '$amount' } } },
@@ -72,6 +73,21 @@ const getDashboard = async (req, res, next) => {
         { $match: { user: req.user._id, date: { $gte: sixtyDaysAgo, $lt: thirtyDaysAgo } } },
         { $group: { _id: '$type', total: { $sum: '$amount' } } },
       ]),
+      Transaction.aggregate([
+        {
+          $match: {
+            user: req.user._id,
+            account: { $ne: null },
+          },
+        },
+        {
+          $group: {
+            _id: { account: '$account', type: '$type' },
+            total: { $sum: '$amount' },
+          },
+        },
+      ]),
+      Account.find({ user: req.user._id }).sort({ createdAt: 1 }),
     ]);
 
     const overallIncome = overallStats.find(s => s._id === 'income')?.total || 0;
@@ -105,6 +121,27 @@ const getDashboard = async (req, res, next) => {
       icon: c.categoryInfo?.icon || '📄',
     }));
 
+    const accountStatMap = {};
+    accountStats.forEach((s) => {
+      const key = String(s._id.account);
+      if (!accountStatMap[key]) accountStatMap[key] = { income: 0, expense: 0 };
+      if (s._id.type === 'income') accountStatMap[key].income = s.total;
+      if (s._id.type === 'expense') accountStatMap[key].expense = s.total;
+    });
+
+    const accounts = accountList.map((a) => {
+      const s = accountStatMap[String(a._id)] || { income: 0, expense: 0 };
+      return {
+        _id: a._id,
+        name: a.name,
+        bankName: a.bankName || '',
+        accountType: a.accountType,
+        totalIncome: s.income,
+        totalExpense: s.expense,
+        balance: a.openingBalance + s.income - s.expense,
+      };
+    });
+
     res.json({
       overallIncome,
       overallExpense,
@@ -120,6 +157,7 @@ const getDashboard = async (req, res, next) => {
       recentTransactions,
       cashFlow,
       spendingBreakdown: breakdown,
+      accounts,
     });
   } catch (error) {
     next(error);

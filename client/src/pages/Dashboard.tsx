@@ -9,7 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { StatCard } from '../components/cashbook/StatCard';
 import { TransactionItem } from '../components/cashbook/TransactionItem';
 import api from '../services/api';
-import type { DashboardData, CategorySpending, Transaction } from '../types';
+import type { DashboardData, DashboardAccount, CategorySpending, Transaction } from '../types';
 
 export default function Dashboard() {
   const { data, isLoading, error } = useQuery({
@@ -73,6 +73,69 @@ export default function Dashboard() {
           <StatCard label="Net Balance" amount={data.overallBalance} variant="balance" index={2} />
         </Col>
       </Row>
+
+      {data.accounts && data.accounts.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <Card
+            title={<Typography.Text strong>Account Balances</Typography.Text>}
+            extra={
+              <Link to="/accounts" style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
+                Manage <ArrowRight style={{ width: 12, height: 12 }} />
+              </Link>
+            }
+            style={{ borderRadius: 12 }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {data.accounts.map((acc: DashboardAccount, i: number) => (
+                <motion.div
+                  key={acc._id}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.04, duration: 0.25 }}
+                >
+                  <Flex align="center" justify="space-between" gap={12} wrap="wrap">
+                    <div style={{ minWidth: 120 }}>
+                      <Typography.Text style={{ fontSize: 13, fontWeight: 600, display: 'block' }}>
+                        {acc.name}
+                      </Typography.Text>
+                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                        {acc.bankName || 'Bank account'}
+                      </Typography.Text>
+                    </div>
+                    <Flex gap={20} align="center" wrap="wrap">
+                      <div style={{ textAlign: 'right' }}>
+                        <Typography.Text type="secondary" style={{ fontSize: 10, display: 'block' }}>Income</Typography.Text>
+                        <Typography.Text style={{ fontSize: 13, fontWeight: 600, color: '#22c55e' }}>
+                          +रू {(acc.totalIncome || 0).toLocaleString('en-IN')}
+                        </Typography.Text>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <Typography.Text type="secondary" style={{ fontSize: 10, display: 'block' }}>Expense</Typography.Text>
+                        <Typography.Text style={{ fontSize: 13, fontWeight: 600, color: '#f97316' }}>
+                          -रू {(acc.totalExpense || 0).toLocaleString('en-IN')}
+                        </Typography.Text>
+                      </div>
+                      <div style={{ textAlign: 'right', minWidth: 110 }}>
+                        <Typography.Text type="secondary" style={{ fontSize: 10, display: 'block' }}>Balance</Typography.Text>
+                        <Typography.Text
+                          style={{
+                            fontSize: 15,
+                            fontWeight: 700,
+                            fontVariantNumeric: 'tabular-nums',
+                            color: (acc.balance || 0) >= 0 ? '#22c55e' : '#f97316',
+                          }}
+                        >
+                          रू {(acc.balance ?? 0).toLocaleString('en-IN')}
+                        </Typography.Text>
+                      </div>
+                    </Flex>
+                  </Flex>
+                </motion.div>
+              ))}
+            </div>
+          </Card>
+        </motion.div>
+      )}
 
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>

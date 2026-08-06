@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useTransactions } from "../hooks/useTransactions";
+import { useAccounts } from "../hooks/useAccounts";
 import { TransactionItem } from "../components/cashbook/TransactionItem";
 import {
   Button,
@@ -30,6 +31,7 @@ export default function Transactions({ type: routeType }: Props) {
   const queryParams = { ...params, type: effectiveType || undefined };
   const { transactions, total, page, pages, loading, deleteTransaction } =
     useTransactions(queryParams);
+  const { accounts } = useAccounts();
   const [searchText, setSearchText] = useState(params.search || "");
   const screens = useBreakpoint();
   const isMobile = !screens.md;
@@ -135,6 +137,22 @@ export default function Transactions({ type: routeType }: Props) {
           </Select>
         </Col>
         <Col xs={12} sm={8} md={6} lg={5}>
+          <Select
+            value={params.account || undefined}
+            onChange={(v) => setFilter("account", v || "")}
+            placeholder="Account"
+            style={{ width: "100%" }}
+            allowClear
+          >
+            <Select.Option value="">All Accounts</Select.Option>
+            {accounts.map((acc: { _id: string; name: string; bankName?: string }) => (
+              <Select.Option key={acc._id} value={acc._id}>
+                {acc.name}
+              </Select.Option>
+            ))}
+          </Select>
+        </Col>
+        <Col xs={12} sm={8} md={6} lg={5}>
           <Input
             type="date"
             value={params.startDate || ""}
@@ -224,6 +242,7 @@ export default function Transactions({ type: routeType }: Props) {
                     categoryName={tx.category?.name}
                     categoryIcon={tx.category?.icon}
                     paymentType={tx.paymentType}
+                    accountName={typeof tx.account === 'object' && tx.account ? tx.account.name : undefined}
                     index={i}
                   />
                 </Link>

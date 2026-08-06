@@ -8,6 +8,7 @@ import {
   Settings,
   Tags,
   CalendarDays,
+  Landmark,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { Typography, theme } from "antd";
@@ -18,6 +19,7 @@ const NAV_ITEMS = [
   { to: "/income", label: "Income", icon: ArrowDownCircle },
   { to: "/expense", label: "Expense", icon: ArrowUpCircle },
   { to: "/monthly-book", label: "Cash Book", icon: BookOpen },
+  { to: "/accounts", label: "Bank Accounts", icon: Landmark },
   { to: "/reports", label: "Reports", icon: BarChart3 },
   { to: "/categories", label: "Categories", icon: Tags },
   { to: "/settings", label: "Settings", icon: Settings },

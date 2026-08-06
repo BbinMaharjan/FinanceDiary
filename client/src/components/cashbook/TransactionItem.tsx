@@ -10,11 +10,12 @@ interface Props {
   categoryName?: string;
   categoryIcon?: string;
   paymentType?: string;
+  accountName?: string;
   onDelete?: () => void;
   index?: number;
 }
 
-export function TransactionItem({ title, amount, type, date, categoryName, categoryIcon, paymentType, onDelete, index = 0 }: Props) {
+export function TransactionItem({ title, amount, type, date, categoryName, categoryIcon, paymentType, accountName, onDelete, index = 0 }: Props) {
   const { token } = theme.useToken();
   const emoji = categoryIcon || '📄';
 
@@ -47,6 +48,7 @@ export function TransactionItem({ title, amount, type, date, categoryName, categ
             {new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             {categoryName ? ` • ${categoryName}` : ''}
             {paymentType ? ` • ${paymentType}` : ''}
+            {accountName ? ` • ${accountName}` : ''}
           </Typography.Text>
         </div>
       </div>

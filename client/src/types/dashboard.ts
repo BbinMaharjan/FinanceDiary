@@ -7,6 +7,16 @@ export interface CashFlowItem {
   expense: number;
 }
 
+export interface DashboardAccount {
+  _id: string;
+  name: string;
+  bankName?: string;
+  accountType?: string;
+  totalIncome: number;
+  totalExpense: number;
+  balance: number;
+}
+
 export interface DashboardData {
   overallIncome: number;
   overallExpense: number;
@@ -22,4 +32,5 @@ export interface DashboardData {
   recentTransactions: Transaction[];
   cashFlow: CashFlowItem[];
   spendingBreakdown: CategorySpending[];
+  accounts: DashboardAccount[];
 }
