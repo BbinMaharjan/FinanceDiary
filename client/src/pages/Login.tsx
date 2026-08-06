@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { Button, Form, Input, Typography, Alert } from "antd";
@@ -146,6 +146,13 @@ const ButtonContent = styled.span`
 
 const IconStyle = { color: "#94a3b8" };
 
+const SignUpText = styled(Typography.Text)<{ $dark: boolean }>`
+  && {
+    color: ${({ $dark }) => ($dark ? "#94a3b8" : "#64748b")};
+    font-size: 14px !important;
+  }
+`;
+
 export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -274,6 +281,28 @@ export default function Login() {
                 </ButtonContent>
               </SubmitButton>
             </Form.Item>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.45, duration: 0.4 }}
+            style={{ marginTop: 20, fontSize: 14 }}
+          >
+            <SignUpText $dark={dark}>
+              Don&apos;t have an account? Check in here to get started{" "}
+              <Link
+                to="/check-in"
+                style={{
+                  color: "#2563eb",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                }}
+                className="hover:underline"
+              >
+                Sign up
+              </Link>
+            </SignUpText>
           </motion.div>
         </Form>
       </CenterCard>

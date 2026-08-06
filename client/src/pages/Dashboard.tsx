@@ -60,6 +60,10 @@ export default function Dashboard() {
 
   const totalSpend = data.spendingBreakdown?.reduce((sum: number, c: CategorySpending) => sum + c.total, 0) || 0;
 
+  const overallAccountIncome = data.accounts?.reduce((sum: number, a: DashboardAccount) => sum + (a.totalIncome || 0), 0) || 0;
+  const overallAccountExpense = data.accounts?.reduce((sum: number, a: DashboardAccount) => sum + (a.totalExpense || 0), 0) || 0;
+  const overallAccountBalance = data.accounts?.reduce((sum: number, a: DashboardAccount) => sum + (a.balance ?? 0), 0) || 0;
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <Row gutter={[16, 16]}>
@@ -85,6 +89,37 @@ export default function Dashboard() {
             }
             style={{ borderRadius: 12 }}
           >
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 12,
+                marginBottom: 16,
+                borderRadius: 12,
+                background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                padding: '18px 12px',
+              }}
+            >
+              <Flex justify="space-around" align="center" wrap="wrap" gap={12}>
+                {[
+                  { label: 'Overall Income', value: overallAccountIncome, color: '#bbf7d0', prefix: '+' },
+                  { label: 'Overall Expense', value: overallAccountExpense, color: '#fed7aa', prefix: '-' },
+                  { label: 'Net Balance', value: overallAccountBalance, color: '#ffffff', prefix: '' },
+                ].map((card) => (
+                  <div key={card.label} style={{ textAlign: 'center' }}>
+                    <Typography.Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 2 }}>
+                      {card.label}
+                    </Typography.Text>
+                    <Typography.Text style={{ color: card.color, fontSize: 18, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+                      {card.prefix}रू {card.value.toLocaleString('en-IN')}
+                    </Typography.Text>
+                  </div>
+                ))}
+              </Flex>
+            </div>
+            <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 8 }}>
+              By Account
+            </Typography.Text>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {data.accounts.map((acc: DashboardAccount, i: number) => (
                 <motion.div
