@@ -290,10 +290,14 @@ export default function Login() {
             style={{ marginTop: 20, fontSize: 14 }}
           >
             <SignUpText $dark={dark}>
-              Don&apos;t have an account?{" "}
+              Don&apos;t have an account? Check in here to get started{" "}
               <Link
-                to="/register"
-                style={{ color: "#2563eb", fontWeight: 600, textDecoration: "none" }}
+                to="/check-in"
+                style={{
+                  color: "#2563eb",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                }}
                 className="hover:underline"
               >
                 Sign up
