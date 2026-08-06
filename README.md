@@ -111,10 +111,3 @@ server/           — Express backend
 | GET    | /api/export/excel    | Export to Excel        |
 | GET    | /api/export/pdf      | Export to PDF          |
 
-## Nepali Months
-
-Transactions auto-convert to Nepali months: Baishakh, Jestha, Ashadh, Shrawan, Bhadra, Ashwin, Kartik, Mangsir, Poush, Magh, Falgun, Chaitra.
-
-## License
-
-MIT
