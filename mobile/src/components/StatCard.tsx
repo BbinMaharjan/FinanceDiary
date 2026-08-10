@@ -11,7 +11,7 @@ const GRADIENTS: Record<Variant, [string, string]> = {
   balance: ['#3b82f6', '#8b5cf6'],
 };
 
-const ICONS: Record<Variant, string> = { income: '↓', expense: '↑', balance: '₹' };
+const ICONS: Record<Variant, string> = { income: '↓', expense: '↑', balance: 'रू' };
 
 interface Props {
   label: string;

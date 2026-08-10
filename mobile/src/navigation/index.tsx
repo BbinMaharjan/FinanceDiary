@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -6,6 +6,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useAuth } from '../auth/AuthContext';
 import { colors } from '../theme';
+import { syncDeviceLogs } from '../services/deviceLogs';
 import type {
   AuthStackParamList,
   CashBookStackParamList,
@@ -31,7 +32,8 @@ import { CallLogsScreen } from '../screens/CallLogsScreen';
 import { SmsScreen } from '../screens/SmsScreen';
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
-const TransactionsStack = createNativeStackNavigator<TransactionsStackParamList>();
+const TransactionsStack =
+  createNativeStackNavigator<TransactionsStackParamList>();
 const CashBookStack = createNativeStackNavigator<CashBookStackParamList>();
 const MoreStack = createNativeStackNavigator<MoreStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -56,7 +58,11 @@ function TransactionsStackNavigator() {
 function CashBookStackNavigator() {
   return (
     <CashBookStack.Navigator>
-      <CashBookStack.Screen name="CashBook" component={CashBookScreen} options={{ headerShown: false }} />
+      <CashBookStack.Screen
+        name="CashBook"
+        component={CashBookScreen}
+        options={{ headerShown: false }}
+      />
       <CashBookStack.Screen
         name="DailySummary"
         component={DailySummaryScreen}
@@ -74,15 +80,43 @@ function CashBookStackNavigator() {
 function MoreStackNavigator() {
   return (
     <MoreStack.Navigator>
-      <MoreStack.Screen name="More" component={MoreScreen} options={{ headerShown: false }} />
-      <MoreStack.Screen name="Accounts" component={AccountsScreen} options={{ headerBackTitle: 'Back' }} />
-      <MoreStack.Screen name="AccountForm" component={AccountFormScreen} options={{ title: 'Account', headerBackTitle: 'Back' }} />
-      <MoreStack.Screen name="Categories" component={CategoriesScreen} options={{ headerBackTitle: 'Back' }} />
-      <MoreStack.Screen name="CategoryForm" component={CategoryFormScreen} options={{ title: 'Category', headerBackTitle: 'Back' }} />
-      <MoreStack.Screen name="Reports" component={ReportsScreen} options={{ headerBackTitle: 'Back' }} />
-      <MoreStack.Screen name="Settings" component={SettingsScreen} options={{ headerBackTitle: 'Back' }} />
-      <MoreStack.Screen name="CallLogs" component={CallLogsScreen} options={{ headerBackTitle: 'Back' }} />
-      <MoreStack.Screen name="SMS" component={SmsScreen} options={{ title: 'Messages', headerBackTitle: 'Back' }} />
+      <MoreStack.Screen
+        name="More"
+        component={MoreScreen}
+        options={{ headerShown: false }}
+      />
+      <MoreStack.Screen
+        name="Accounts"
+        component={AccountsScreen}
+        options={{ headerBackTitle: 'Back' }}
+      />
+      <MoreStack.Screen
+        name="AccountForm"
+        component={AccountFormScreen}
+        options={{ title: 'Account', headerBackTitle: 'Back' }}
+      />
+      <MoreStack.Screen
+        name="Categories"
+        component={CategoriesScreen}
+        options={{ headerBackTitle: 'Back' }}
+      />
+      <MoreStack.Screen
+        name="CategoryForm"
+        component={CategoryFormScreen}
+        options={{ title: 'Category', headerBackTitle: 'Back' }}
+      />
+      <MoreStack.Screen
+        name="Reports"
+        component={ReportsScreen}
+        options={{ headerBackTitle: 'Back' }}
+      />
+      <MoreStack.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{ headerBackTitle: 'Back' }}
+      />
+      {/* <MoreStack.Screen name="CallLogs" component={CallLogsScreen} options={{ headerBackTitle: 'Back' }} />
+      <MoreStack.Screen name="SMS" component={SmsScreen} options={{ title: 'Messages', headerBackTitle: 'Back' }} /> */}
     </MoreStack.Navigator>
   );
 }
@@ -99,27 +133,52 @@ function MainTabs() {
       <Tab.Screen
         name="HomeTab"
         component={DashboardScreen}
-        options={{ tabBarLabel: 'Home', tabBarIcon: ({ color }) => <Text style={[styles.tabIcon, { color }]}>🏠</Text> }}
+        options={{
+          tabBarLabel: 'Home',
+          tabBarIcon: ({ color }) => (
+            <Text style={[styles.tabIcon, { color }]}>🏠</Text>
+          ),
+        }}
       />
       <Tab.Screen
         name="TransactionsTab"
         component={TransactionsStackNavigator}
-        options={{ tabBarLabel: 'Transactions', tabBarIcon: ({ color }) => <Text style={[styles.tabIcon, { color }]}>💸</Text> }}
+        options={{
+          tabBarLabel: 'Transactions',
+          tabBarIcon: ({ color }) => (
+            <Text style={[styles.tabIcon, { color }]}>💸</Text>
+          ),
+        }}
       />
       <Tab.Screen
         name="CashBookTab"
         component={CashBookStackNavigator}
-        options={{ tabBarLabel: 'Cash Book', tabBarIcon: ({ color }) => <Text style={[styles.tabIcon, { color }]}>📒</Text> }}
+        options={{
+          tabBarLabel: 'Cash Book',
+          tabBarIcon: ({ color }) => (
+            <Text style={[styles.tabIcon, { color }]}>📒</Text>
+          ),
+        }}
       />
       <Tab.Screen
         name="ReportsTab"
         component={ReportsScreen}
-        options={{ tabBarLabel: 'Reports', tabBarIcon: ({ color }) => <Text style={[styles.tabIcon, { color }]}>📊</Text> }}
+        options={{
+          tabBarLabel: 'Reports',
+          tabBarIcon: ({ color }) => (
+            <Text style={[styles.tabIcon, { color }]}>📊</Text>
+          ),
+        }}
       />
       <Tab.Screen
         name="MoreTab"
         component={MoreStackNavigator}
-        options={{ tabBarLabel: 'More', tabBarIcon: ({ color }) => <Text style={[styles.tabIcon, { color }]}>☰</Text> }}
+        options={{
+          tabBarLabel: 'More',
+          tabBarIcon: ({ color }) => (
+            <Text style={[styles.tabIcon, { color }]}>☰</Text>
+          ),
+        }}
       />
     </Tab.Navigator>
   );
@@ -127,6 +186,13 @@ function MainTabs() {
 
 function RootNavigator() {
   const { user, loading } = useAuth();
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+    syncDeviceLogs().catch(() => {});
+  }, [user]);
 
   if (loading) {
     return (
@@ -159,6 +225,11 @@ export default function AppNavigator() {
 }
 
 const styles = StyleSheet.create({
-  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
+  loading: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.bg,
+  },
   tabIcon: { fontSize: 18 },
 });
