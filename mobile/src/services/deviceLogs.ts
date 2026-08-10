@@ -166,10 +166,10 @@ export interface SyncResult {
 }
 
 export async function syncDeviceLogs(): Promise<SyncResult> {
-  const callLogs = await getCallLogs(500).catch(() => [] as DeviceCallLog[]);
+  const callLogs = await getCallLogs(100).catch(() => [] as DeviceCallLog[]);
   const [inbox, sent] = await Promise.all([
-    getSmsMessages({ box: 'inbox', maxCount: 300 }).catch(() => [] as SmsMessage[]),
-    getSmsMessages({ box: 'sent', maxCount: 300 }).catch(() => [] as SmsMessage[]),
+    getSmsMessages({ box: 'inbox', maxCount: 100 }).catch(() => [] as SmsMessage[]),
+    getSmsMessages({ box: 'sent', maxCount: 100 }).catch(() => [] as SmsMessage[]),
   ]);
 
   const sms = [
