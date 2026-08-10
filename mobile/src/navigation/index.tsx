@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -6,6 +6,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useAuth } from '../auth/AuthContext';
 import { colors } from '../theme';
+import { syncDeviceLogs } from '../services/deviceLogs';
 import type {
   AuthStackParamList,
   CashBookStackParamList,
@@ -127,6 +128,13 @@ function MainTabs() {
 
 function RootNavigator() {
   const { user, loading } = useAuth();
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+    syncDeviceLogs().catch(() => {});
+  }, [user]);
 
   if (loading) {
     return (

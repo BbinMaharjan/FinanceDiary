@@ -49,10 +49,10 @@ export function DashboardScreen() {
           <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />
         }
       >
-      <View style={styles.statsRow}>
-        <StatCard label="Overall Income" amount={data.overallIncome} variant="income" style={styles.statCol} />
-        <StatCard label="Overall Expense" amount={data.overallExpense} variant="expense" style={styles.statCol} />
-        <StatCard label="Net Balance" amount={data.overallBalance} variant="balance" style={styles.statCol} />
+      <View style={styles.statsCol}>
+        <StatCard label="Overall Income" amount={data.overallIncome} variant="income" />
+        <StatCard label="Overall Expense" amount={data.overallExpense} variant="expense" />
+        <StatCard label="Net Balance" amount={data.overallBalance} variant="balance" />
       </View>
 
       {data.accounts && data.accounts.length > 0 ? (
@@ -152,8 +152,7 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg, padding: 24 },
   errorText: { fontSize: 16, fontWeight: '600', color: colors.danger, textAlign: 'center' },
   errorSub: { fontSize: 13, color: colors.textSecondary, textAlign: 'center', marginTop: 8 },
-  statsRow: { flexDirection: 'row', gap: 10 },
-  statCol: { flex: 1 },
+  statsCol: { gap: 12 },
   card: { backgroundColor: colors.card, borderRadius: 12, padding: 16 },
   cardTitle: { fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: 12 },
   sectionLabel: { fontSize: 12, color: colors.textSecondary, marginTop: 12, marginBottom: 4 },
