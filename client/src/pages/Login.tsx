@@ -283,7 +283,7 @@ export default function Login() {
             </Form.Item>
           </motion.div>
 
-          <motion.div
+          {/* <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.45, duration: 0.4 }}
@@ -303,7 +303,7 @@ export default function Login() {
                 Sign up
               </Link>
             </SignUpText>
-          </motion.div>
+          </motion.div> */}
         </Form>
       </CenterCard>
     </PageContainer>
