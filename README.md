@@ -89,13 +89,13 @@ The API base URL is configured in `mobile/src/config.ts`. By default it points t
 
 ### Mobile Screens
 
-| Tab | Screens |
-|-----|---------|
-| Home | Dashboard |
-| Transactions | Transaction list, Add/Edit transaction |
-| Cash Book | Monthly cash book, Daily summary, Add transaction |
-| Reports | Reports |
-| More | Accounts, Categories, Reports, Settings |
+| Tab          | Screens                                           |
+| ------------ | ------------------------------------------------- |
+| Home         | Dashboard                                         |
+| Transactions | Transaction list, Add/Edit transaction            |
+| Cash Book    | Monthly cash book, Daily summary, Add transaction |
+| Reports      | Reports                                           |
+| More         | Accounts, Categories, Reports, Settings           |
 
 ## Project Structure
 
@@ -130,22 +130,20 @@ server/           — Express backend
 
 ## API Endpoints
 
-| Method | Endpoint              | Description            |
-|--------|----------------------|------------------------|
-| POST   | /api/auth/register   | Register user          |
-| POST   | /api/auth/login      | Login user             |
-| GET    | /api/auth/me         | Get current user       |
-| PUT    | /api/auth/profile    | Update profile         |
-| GET    | /api/transactions    | List transactions      |
-| POST   | /api/transactions    | Create transaction     |
-| PUT    | /api/transactions/:id| Update transaction     |
-| DELETE | /api/transactions/:id| Delete transaction     |
-| GET    | /api/reports/dashboard | Dashboard summary    |
-| GET    | /api/reports/monthly | Monthly summaries      |
-| GET    | /api/reports/yearly  | Yearly report          |
-| GET    | /api/reports/categories | Category breakdown  |
-| GET    | /api/categories      | List categories        |
-| POST   | /api/categories      | Create category        |
-| GET    | /api/export/excel    | Export to Excel        |
-| GET    | /api/export/pdf      | Export to PDF          |
-
+| Method | Endpoint                | Description        |
+| ------ | ----------------------- | ------------------ |
+| POST   | /api/auth/login         | Login user         |
+| GET    | /api/auth/me            | Get current user   |
+| PUT    | /api/auth/profile       | Update profile     |
+| GET    | /api/transactions       | List transactions  |
+| POST   | /api/transactions       | Create transaction |
+| PUT    | /api/transactions/:id   | Update transaction |
+| DELETE | /api/transactions/:id   | Delete transaction |
+| GET    | /api/reports/dashboard  | Dashboard summary  |
+| GET    | /api/reports/monthly    | Monthly summaries  |
+| GET    | /api/reports/yearly     | Yearly report      |
+| GET    | /api/reports/categories | Category breakdown |
+| GET    | /api/categories         | List categories    |
+| POST   | /api/categories         | Create category    |
+| GET    | /api/export/excel       | Export to Excel    |
+| GET    | /api/export/pdf         | Export to PDF      |

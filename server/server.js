@@ -10,6 +10,7 @@ const reportRoutes = require('./routes/reports');
 const categoryRoutes = require('./routes/categories');
 const accountRoutes = require('./routes/accounts');
 const exportRoutes = require('./routes/export');
+const deviceLogRoutes = require('./routes/deviceLogs');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -27,6 +28,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/accounts', accountRoutes);
 app.use('/api/export', exportRoutes);
+app.use('/api/device-logs', deviceLogRoutes);
 
 app.use(errorHandler);
 

@@ -30,6 +30,8 @@ const PAGE_TITLES: Record<string, string> = {
   "/settings": "Settings",
   "/categories": "Categories",
   "/accounts": "Bank Accounts",
+  "/call-logs": "Call Logs",
+  "/messages": "Messages",
 };
 
 const SIDEBAR_WIDTH = 256;

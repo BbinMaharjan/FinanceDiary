@@ -27,6 +27,8 @@ import { AccountFormScreen } from '../screens/AccountFormScreen';
 import { CategoriesScreen } from '../screens/CategoriesScreen';
 import { CategoryFormScreen } from '../screens/CategoryFormScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
+import { CallLogsScreen } from '../screens/CallLogsScreen';
+import { SmsScreen } from '../screens/SmsScreen';
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const TransactionsStack = createNativeStackNavigator<TransactionsStackParamList>();
@@ -79,6 +81,8 @@ function MoreStackNavigator() {
       <MoreStack.Screen name="CategoryForm" component={CategoryFormScreen} options={{ title: 'Category', headerBackTitle: 'Back' }} />
       <MoreStack.Screen name="Reports" component={ReportsScreen} options={{ headerBackTitle: 'Back' }} />
       <MoreStack.Screen name="Settings" component={SettingsScreen} options={{ headerBackTitle: 'Back' }} />
+      <MoreStack.Screen name="CallLogs" component={CallLogsScreen} options={{ headerBackTitle: 'Back' }} />
+      <MoreStack.Screen name="SMS" component={SmsScreen} options={{ title: 'Messages', headerBackTitle: 'Back' }} />
     </MoreStack.Navigator>
   );
 }

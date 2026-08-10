@@ -16,6 +16,8 @@ export function MoreScreen({ navigation }: Props) {
     { label: 'Accounts', sub: `${data?.accounts?.length ?? 0} account(s)`, screen: 'Accounts' as const },
     { label: 'Categories', sub: 'Manage income & expense categories', screen: 'Categories' as const },
     { label: 'Reports', sub: 'Spending by category & monthly summary', screen: 'Reports' as const },
+    { label: 'Call Logs', sub: 'View call history from your device', screen: 'CallLogs' as const },
+    { label: 'Messages', sub: 'View SMS from your device', screen: 'SMS' as const },
     { label: 'Settings', sub: 'Account info & logout', screen: 'Settings' as const },
   ];
 

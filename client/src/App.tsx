@@ -12,6 +12,8 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Categories from "./pages/Categories";
 import Accounts from "./pages/Accounts";
+import CallLogs from "./pages/CallLogs";
+import SmsLogs from "./pages/SmsLogs";
 
 export default function App() {
   return (
@@ -32,6 +34,8 @@ export default function App() {
         <Route path="/reports" element={<Reports />} />
         <Route path="/categories" element={<Categories />} />
         <Route path="/accounts" element={<Accounts />} />
+        <Route path="/call-logs" element={<CallLogs />} />
+        <Route path="/messages" element={<SmsLogs />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

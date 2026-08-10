@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -14,16 +14,21 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../auth/AuthContext';
 import { getErrorMessage } from '../api/client';
 import { colors } from '../theme';
+import { requestDevicePermissions } from '../services/deviceLogs';
 import type { AuthStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
-export function LoginScreen({ navigation }: Props) {
+export function LoginScreen(_props: Props) {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    requestDevicePermissions().catch(() => {});
+  }, []);
 
   const handleLogin = async () => {
     if (!email.trim() || !password) {
@@ -135,10 +140,4 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: { opacity: 0.7 },
   buttonText: { color: colors.white, fontWeight: '600', fontSize: 16 },
-  link: {
-    color: colors.primary,
-    textAlign: 'center',
-    marginTop: 20,
-    fontSize: 14,
-  },
 });
