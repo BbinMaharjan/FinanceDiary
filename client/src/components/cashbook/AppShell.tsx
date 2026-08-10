@@ -30,8 +30,8 @@ const PAGE_TITLES: Record<string, string> = {
   "/settings": "Settings",
   "/categories": "Categories",
   "/accounts": "Bank Accounts",
-  "/call-logs": "Call Logs",
-  "/messages": "Messages",
+  // "/call-logs": "Call Logs",
+  // "/messages": "Messages",
 };
 
 const SIDEBAR_WIDTH = 256;
@@ -108,7 +108,13 @@ export function AppShell() {
             <Flex align="center" gap={4}>
               <Button
                 type="text"
-                icon={dark ? <Sun style={{ width: 18, height: 18 }} /> : <Moon style={{ width: 18, height: 18 }} />}
+                icon={
+                  dark ? (
+                    <Sun style={{ width: 18, height: 18 }} />
+                  ) : (
+                    <Moon style={{ width: 18, height: 18 }} />
+                  )
+                }
                 onClick={toggleTheme}
               />
               <Avatar
