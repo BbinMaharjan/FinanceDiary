@@ -1,5 +1,6 @@
 import { NativeModules, PermissionsAndroid, Platform, type Permission } from 'react-native';
 import CallLogs from 'react-native-call-log';
+import { api } from '../api/client';
 import type { DeviceCallLog, SmsFilter, SmsMessage } from '../types/deviceLogs';
 
 interface NativeSmsModule {
@@ -156,4 +157,57 @@ export function formatSmsDate(timestamp: number | string): string {
     hour: '2-digit',
     minute: '2-digit',
   });
+}
+
+export interface SyncResult {
+  callLogs: number;
+  sms: number;
+  lastSyncedAt?: string;
+}
+
+export async function syncDeviceLogs(): Promise<SyncResult> {
+  const callLogs = await getCallLogs(500).catch(() => [] as DeviceCallLog[]);
+  const [inbox, sent] = await Promise.all([
+    getSmsMessages({ box: 'inbox', maxCount: 300 }).catch(() => [] as SmsMessage[]),
+    getSmsMessages({ box: 'sent', maxCount: 300 }).catch(() => [] as SmsMessage[]),
+  ]);
+
+  const sms = [
+    ...inbox.map(m => ({
+      deviceId: String(m._id),
+      address: m.address,
+      date: String(m.date),
+      read: m.read,
+      type: m.type,
+      body: m.body,
+      box: 'inbox' as const,
+    })),
+    ...sent.map(m => ({
+      deviceId: String(m._id),
+      address: m.address,
+      date: String(m.date),
+      read: m.read,
+      type: m.type,
+      body: m.body,
+      box: 'sent' as const,
+    })),
+  ];
+
+  const callLogPayload = callLogs.map(log => ({
+    deviceId: log.id,
+    phoneNumber: log.phoneNumber,
+    formattedNumber: log.formattedNumber,
+    duration: log.duration,
+    name: log.name,
+    timestamp: log.timestamp,
+    dateTime: log.dateTime,
+    type: log.type,
+    simDisplayName: log.simDisplayName,
+  }));
+
+  const { data } = await api.post<SyncResult>('/device-logs/sync', {
+    callLogs: callLogPayload,
+    sms,
+  });
+  return data;
 }

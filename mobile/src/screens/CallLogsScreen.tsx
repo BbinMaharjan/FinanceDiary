@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Linking, Platform, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Linking, Platform, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { EmptyState } from '../components/EmptyState';
 import { colors } from '../theme';
-import { formatDuration, getCallLogs, PermissionError } from '../services/deviceLogs';
+import { formatDuration, getCallLogs, PermissionError, syncDeviceLogs } from '../services/deviceLogs';
 import type { DeviceCallLog } from '../types/deviceLogs';
 import type { MoreStackParamList } from '../navigation/types';
 
@@ -37,6 +37,23 @@ export function CallLogsScreen(_props: Props) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [lastSyncAt, setLastSyncAt] = useState<Date | null>(null);
+
+  const handleSync = useCallback(async () => {
+    if (syncing) {
+      return;
+    }
+    setSyncing(true);
+    try {
+      await syncDeviceLogs();
+      setLastSyncAt(new Date());
+    } catch {
+      // Sync is best-effort; keep the previous state.
+    } finally {
+      setSyncing(false);
+    }
+  }, [syncing]);
 
   const load = useCallback(async (isRefresh = false) => {
     if (isRefresh) {
@@ -48,6 +65,11 @@ export function CallLogsScreen(_props: Props) {
     try {
       const data = await getCallLogs(500);
       setLogs(data);
+      if (!isRefresh) {
+        syncDeviceLogs()
+          .then(() => setLastSyncAt(new Date()))
+          .catch(() => {});
+      }
     } catch (e) {
       setError(e instanceof Error ? e : new Error('Failed to load call logs.'));
     } finally {
@@ -72,7 +94,18 @@ export function CallLogsScreen(_props: Props) {
     <View style={styles.screen}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Call Logs</Text>
-        {logs.length > 0 ? <Text style={styles.count}>{logs.length} calls</Text> : null}
+        <View style={styles.headerRight}>
+          {logs.length > 0 ? <Text style={styles.count}>{logs.length} calls</Text> : null}
+          <Pressable
+            style={[styles.syncBtn, syncing && styles.syncBtnDisabled]}
+            onPress={handleSync}
+            disabled={syncing}
+          >
+            <Text style={styles.syncText}>
+              {syncing ? 'Syncing...' : lastSyncAt ? 'Synced' : 'Sync'}
+            </Text>
+          </Pressable>
+        </View>
       </View>
 
       {loading ? (
@@ -149,6 +182,15 @@ const styles = StyleSheet.create({
   },
   headerTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
   count: { fontSize: 13, color: colors.textSecondary },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  syncBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  syncBtnDisabled: { opacity: 0.6 },
+  syncText: { color: colors.white, fontSize: 12, fontWeight: '600' },
   list: { padding: 16, gap: 10 },
   card: {
     flexDirection: 'row',

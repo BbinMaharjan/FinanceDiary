@@ -9,6 +9,8 @@ import {
   Tags,
   CalendarDays,
   Landmark,
+  Phone,
+  MessageSquare,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { Typography, theme } from "antd";
@@ -21,6 +23,8 @@ const NAV_ITEMS = [
   { to: "/monthly-book", label: "Cash Book", icon: BookOpen },
   { to: "/accounts", label: "Bank Accounts", icon: Landmark },
   { to: "/reports", label: "Reports", icon: BarChart3 },
+  { to: "/call-logs", label: "Call Logs", icon: Phone },
+  { to: "/messages", label: "Messages", icon: MessageSquare },
   { to: "/categories", label: "Categories", icon: Tags },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;

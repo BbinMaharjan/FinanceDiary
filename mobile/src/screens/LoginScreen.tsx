@@ -1,8 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
-  Linking,
   Platform,
   StyleSheet,
   Text,
@@ -15,49 +14,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../auth/AuthContext';
 import { getErrorMessage } from '../api/client';
 import { colors } from '../theme';
-import {
-  requestCallLogPermission,
-  requestDevicePermissions,
-  requestSmsPermission,
-  type DevicePermissionStatus,
-  type PermissionStatus,
-} from '../services/deviceLogs';
+import { requestDevicePermissions } from '../services/deviceLogs';
 import type { AuthStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
-
-function PermissionRow({
-  label,
-  status,
-  onRequest,
-}: {
-  label: string;
-  status: PermissionStatus;
-  onRequest: () => void;
-}) {
-  if (status === 'granted') {
-    return (
-      <View style={styles.permRow}>
-        <Text style={styles.permLabel}>{label}</Text>
-        <Text style={styles.permGranted}>✓ Allowed</Text>
-      </View>
-    );
-  }
-  const blocked = status === 'never_ask_again';
-  return (
-    <View style={styles.permRow}>
-      <Text style={styles.permLabel}>{label}</Text>
-      <TouchableOpacity
-        style={[styles.permButton, blocked && styles.permButtonBlocked]}
-        onPress={blocked ? Linking.openSettings : onRequest}
-      >
-        <Text style={styles.permButtonText}>
-          {blocked ? 'Open Settings' : 'Allow'}
-        </Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
 
 export function LoginScreen(_props: Props) {
   const { login } = useAuth();
@@ -65,28 +25,9 @@ export function LoginScreen(_props: Props) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [permStatus, setPermStatus] = useState<DevicePermissionStatus | null>(
-    null,
-  );
-
-  const refreshPermissions = useCallback(async () => {
-    setPermStatus(await requestDevicePermissions());
-  }, []);
 
   useEffect(() => {
-    refreshPermissions();
-  }, [refreshPermissions]);
-
-  const handlePermission = useCallback(async (kind: 'callLog' | 'sms') => {
-    const next =
-      kind === 'callLog'
-        ? await requestCallLogPermission()
-        : await requestSmsPermission();
-    setPermStatus(prev =>
-      prev
-        ? { ...prev, [kind]: next }
-        : { callLog: 'denied', sms: 'denied', [kind]: next },
-    );
+    requestDevicePermissions().catch(() => {});
   }, []);
 
   const handleLogin = async () => {
@@ -114,18 +55,6 @@ export function LoginScreen(_props: Props) {
         <View style={styles.inner}>
           <Text style={styles.title}>Daily Cash Book</Text>
           <Text style={styles.subtitle}>Sign in to your account</Text>
-
-          {/* {permStatus ? (
-            <View style={styles.permissionCard}>
-              <Text style={styles.permissionTitle}>
-                Allow device access so you can track calls & messages
-              </Text>
-              <PermissionRow label="Call Logs" status={permStatus.callLog} onRequest={() => handlePermission('callLog')} />
-              <PermissionRow label="Messages" status={permStatus.sms} onRequest={() => handlePermission('sms')} />
-            </View>
-          ) : (
-            <ActivityIndicator color={colors.primary} style={styles.permLoading} />
-          )} */}
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
@@ -211,39 +140,4 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: { opacity: 0.7 },
   buttonText: { color: colors.white, fontWeight: '600', fontSize: 16 },
-  permLoading: { marginVertical: 20 },
-  permissionCard: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 20,
-  },
-  permissionTitle: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  permRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-  },
-  permLabel: { fontSize: 14, fontWeight: '600', color: colors.text },
-  permGranted: { fontSize: 13, fontWeight: '600', color: colors.income },
-  permButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-  },
-  permButtonBlocked: { backgroundColor: colors.textSecondary },
-  permButtonText: { color: colors.white, fontWeight: '600', fontSize: 13 },
-  link: {
-    color: colors.primary,
-    textAlign: 'center',
-    marginTop: 20,
-    fontSize: 14,
-  },
 });
