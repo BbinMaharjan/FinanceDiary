@@ -25,6 +25,8 @@ export type MoreStackParamList = {
   CategoryForm: { id?: string; type?: TransactionType } | undefined;
   Reports: undefined;
   Settings: undefined;
+  CallLogs: undefined;
+  SMS: undefined;
 };
 
 export type MainTabParamList = {
